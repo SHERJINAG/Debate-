@@ -14,8 +14,9 @@ const characterProfiles = {
   6: { name: "Kavya", role: "Public Opposer", colorCode: "bg-rose-600/90" },
 };
 
+
 function SeatedDebater({ color = "#1e293b", hairColor = "#b45309", activeMouthScale = 1 }) {
-  const mouthRef = useRef();
+  const mouthRef = useRef<THREE.Mesh | null>(null);
 
   useFrame(() => {
     if (mouthRef.current) {
@@ -73,9 +74,8 @@ function SeatedDebater({ color = "#1e293b", hairColor = "#b45309", activeMouthSc
   );
 }
 
-function StudioPodium({ speakerId, speakerColor, hairColor, activeMouthScale, isSpeaking }) {
-  const meta = characterProfiles[speakerId] || { name: "Guest", role: "Panelist", colorCode: "bg-slate-600" };
-
+function StudioPodium({speakerId, speakerColor, hairColor, activeMouthScale, isSpeaking }: { speakerId: string; speakerColor: string; hairColor: string; activeMouthScale: number; isSpeaking: boolean }) {
+  const meta = characterProfiles[Number(speakerId) as keyof typeof characterProfiles] || { name: "Guest", role: "Panelist", colorCode: "bg-slate-600" }; 
   return (
     <group>
       {/* --- CONDITIONALLY RENDER NAMEPLATE ONLY WHEN SPEAKING --- */}
@@ -123,7 +123,7 @@ function StudioPodium({ speakerId, speakerColor, hairColor, activeMouthScale, is
 }
 
 // --- CINEMATIC INTRO CAMERA CONTROLLER ---
-function CinematicCameraControl({ activeSpeakerPosition, isTheater, isIntroActive }) {
+function CinematicCameraControl({ activeSpeakerPosition, isTheater, isIntroActive }: { activeSpeakerPosition: THREE.Vector3 | null; isTheater: boolean; isIntroActive: boolean }) {
   const { camera } = useThree();
   const targetCamPos = useRef(new THREE.Vector3(0, 3.4, 6.8));
   const targetLookAt = useRef(new THREE.Vector3(0, 1.2, 0));
@@ -215,17 +215,22 @@ function HighGlossStageFloor() {
   );
 }
 
+interface TimelineSegment {
+  dialogue: string;
+  speaker_id: number;
+}
+
 export default function RealStudioPage() {
   const [screen, setScreen] = useState("setup");
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDataReady, setIsDataReady] = useState(false);
-  const [timeline, setTimeline] = useState([]);
+  const [timeline, setTimeline] = useState<TimelineSegment[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1); // Changed to -1 to capture the Intro State
   const [isIntroActive, setIsIntroActive] = useState(false);
   const [mouthScale, setMouthScale] = useState(1);
 
-  const mouthAnimationRef = useRef(null);
+  const mouthAnimationRef = useRef<number | null>(null);
 
   const U_SpeakersSetup = useMemo(() => [
     { id: 3, targetX: -0.9, rotY: 0.1,  suit: "#1e293b", hair: "#27272a" },
@@ -236,7 +241,7 @@ export default function RealStudioPage() {
     { id: 6, targetX: 4.6,  rotY: -1.5, suit: "#0f172a", hair: "#451a03" },
   ], []);
 
-  const handleFetchScript = async (e) => {
+  const handleFetchScript = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!topic.trim()) return;
     setLoading(true);
@@ -252,7 +257,7 @@ export default function RealStudioPage() {
         setTimeline(data.timeline);
         setIsDataReady(true);
       }
-    } catch (err) {
+    } catch {
       alert("Error parsing elements from FastAPI backend server.");
     } finally {
       setLoading(false);
@@ -269,11 +274,13 @@ export default function RealStudioPage() {
   };
 
   const stopProceduralLipSync = () => {
-    cancelAnimationFrame(mouthAnimationRef.current);
+    if (mouthAnimationRef.current) {
+      cancelAnimationFrame(mouthAnimationRef.current);
+    }
     setMouthScale(1);
   };
 
-  const playSpeechSegment = (index) => {
+  const playSpeechSegment = (index: number) => {
     if (index >= timeline.length) {
       stopProceduralLipSync();
       setScreen("setup");
@@ -285,12 +292,13 @@ export default function RealStudioPage() {
 
     const activeSegment = timeline[index];
     if (!activeSegment) return;
+   
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(activeSegment.dialogue);
+    const utterance = new SpeechSynthesisUtterance(String(activeSegment?.dialogue || ""));
     utterance.lang = "ta-IN";
 
-    switch (activeSegment.speaker_id) {
+    switch (Number(activeSegment?.speaker_id)) { 
       case 3:
         utterance.pitch = 1.0; utterance.rate = 1.05;
         break;
@@ -335,13 +343,18 @@ export default function RealStudioPage() {
     }, 5000);
   };
 
+  const prevIndexRef = useRef(currentIndex);
+
   useEffect(() => {
-    if (screen === "theater" && timeline.length > 0 && currentIndex >= 0) {
+    if (screen === "theater" && timeline.length > 0 && currentIndex >= 0 && prevIndexRef.current !== currentIndex) {
+      prevIndexRef.current = currentIndex;
       playSpeechSegment(currentIndex);
     }
     return () => {
       window.speechSynthesis.cancel();
-      cancelAnimationFrame(mouthAnimationRef.current);
+      if (mouthAnimationRef.current) {
+        cancelAnimationFrame(mouthAnimationRef.current);
+      }
     };
   }, [screen, currentIndex, timeline]);
 
@@ -455,7 +468,7 @@ export default function RealStudioPage() {
             return (
               <group key={speaker.id} position={[x, 0, z]} rotation={[0, speaker.rotY, 0]}>
                 <StudioPodium 
-                  speakerId={speaker.id}
+                  speakerId={String(speaker.id)}
                   speakerColor={speaker.suit} 
                   hairColor={speaker.hair} 
                   activeMouthScale={isSpeakingNow ? mouthScale : 1} 
