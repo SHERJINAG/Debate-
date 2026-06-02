@@ -242,7 +242,7 @@ export default function RealStudioPage() {
     setLoading(true);
     setIsDataReady(false);
     try {
-      const res = await fetch("http://localhost:8000/api/studio/process-debate", {
+      const res = await fetch("https://debate-system.onrender.com/api/studio/process-debate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic })
