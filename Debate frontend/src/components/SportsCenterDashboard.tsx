@@ -1213,7 +1213,7 @@ export default function SportsCenterDashboard({ onExit }: SportsCenterDashboardP
     (async () => {
       try {
         const endpoint = sport === "cricket" ? "/api/sports/cricket" : "/api/sports/football";
-        const res = await axios.get(`http://localhost:8000${endpoint}`);
+        const res = await axios.get(`https://debate-system.onrender.com${endpoint}`);
         if (res.data.success) setMatches(res.data.matches);
       } catch (err) { console.error("Failed to fetch matches:", err); }
     })();
@@ -1229,7 +1229,7 @@ setTimeout(() => {
   setIsLoadingStudio(false);
 }, 2000);
     try {
-      const res = await axios.post("http://localhost:8000/api/sports/broadcast", {
+      const res = await axios.post("https://debate-system.onrender.com/api/sports/broadcast", {
         choice: sport === "cricket" ? "1" : "2",
         language: language === "ta" ? "2" : "1",
         match_index: matchIndex
