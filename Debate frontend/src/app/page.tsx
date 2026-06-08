@@ -18,7 +18,7 @@ export default function Home() {
     setLoadingNews(true);
     setSelectedCategory(category);
     try {
-      const res = await fetch("http://localhost:8000/api/studio/process-news", {
+      const res = await fetch("https://debate-system.onrender.com/api/studio/process-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category })
