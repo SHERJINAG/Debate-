@@ -1213,7 +1213,7 @@ export default function SportsCenterDashboard({ onExit }: SportsCenterDashboardP
     (async () => {
       try {
         const endpoint = sport === "cricket" ? "/api/sports/cricket" : "/api/sports/football";
-        const res = await axios.get(`https://debate-system.onrender.com${endpoint}`);
+        const res = await axios.get(`http://localhost:8000${endpoint}`);
         if (res.data.success) setMatches(res.data.matches);
       } catch (err) { console.error("Failed to fetch matches:", err); }
     })();
@@ -1229,7 +1229,7 @@ setTimeout(() => {
   setIsLoadingStudio(false);
 }, 2000);
     try {
-      const res = await axios.post("https://debate-system.onrender.com/api/sports/broadcast", {
+      const res = await axios.post("http://localhost:8000/api/sports/broadcast", {
         choice: sport === "cricket" ? "1" : "2",
         language: language === "ta" ? "2" : "1",
         match_index: matchIndex
@@ -1274,215 +1274,296 @@ setTimeout(() => {
   }, [broadcastSegments, language]);
 
   if (!sport) {
-    return (
-      <div className="w-screen h-screen bg-[#030712] flex flex-col items-center justify-center text-white p-6">
-        <button onClick={onExit} className="absolute top-4 left-4 bg-slate-900/80 hover:bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 transition-all">← Back</button>
-        <div className="text-center space-y-4">
-          <div className="inline-block px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4">Broadcast Portal</div>
-          <h1 className="text-6xl font-black tracking-tighter mb-12">SPORTS<span className="text-emerald-500">CENTER</span></h1>
-        </div>
-        <div className="grid grid-cols-2 gap-8 max-w-4xl w-full">
-          <button onClick={() => setSport("cricket")} className="group relative overflow-hidden bg-slate-900 border border-slate-800 hover:border-emerald-500 p-10 rounded-3xl transition-all">
-            <div className="relative z-10">
-              <span className="text-6xl mb-6 block">🏏</span>
-              <h2 className="text-3xl font-bold">Cricket</h2>
-              <p className="text-slate-400 mt-2">Live Analysis & Commentary</p>
-            </div>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all" />
-          </button>
-          <button onClick={() => setSport("football")} className="group relative overflow-hidden bg-slate-900 border border-slate-800 hover:border-amber-500 p-10 rounded-3xl transition-all">
-            <div className="relative z-10">
-              <span className="text-6xl mb-6 block">⚽</span>
-              <h2 className="text-3xl font-bold">Football</h2>
-              <p className="text-slate-400 mt-2">World Cup Coverage</p>
-            </div>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all" />
-          </button>
-        </div>
+   return (
+  <div className="w-full min-h-screen bg-[#030712] flex flex-col items-center px-4 py-6 relative overflow-x-hidden">
+
+    {/* Back Button */}
+    <button
+      onClick={onExit}
+      className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-slate-900/80 hover:bg-slate-800 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 transition-all text-sm sm:text-base z-50"
+    >
+      ← Back
+    </button>
+
+    {/* Header */}
+    <div className="text-center space-y-4 mt-16 sm:mt-20 mb-10 sm:mb-12 max-w-2xl">
+      
+      <div className="inline-block px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold tracking-widest uppercase">
+        Broadcast Portal
       </div>
-    );
+
+      <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter">
+        SPORTS<span className="text-emerald-500">CENTER</span>
+      </h1>
+    </div>
+
+    {/* Grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl w-full">
+
+      {/* Cricket */}
+      <button
+        onClick={() => setSport("cricket")}
+        className="group relative overflow-hidden bg-slate-900 border border-slate-800 hover:border-emerald-500 p-6 sm:p-10 rounded-3xl transition-all text-left"
+      >
+        <div className="relative z-10">
+          <span className="text-4xl sm:text-6xl mb-4 sm:mb-6 block">🏏</span>
+          <h2 className="text-xl sm:text-3xl font-bold">Cricket</h2>
+          <p className="text-slate-400 mt-2 text-sm sm:text-base">
+            Live Analysis & Commentary
+          </p>
+        </div>
+
+        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all" />
+      </button>
+
+      {/* Football */}
+      <button
+        onClick={() => setSport("football")}
+        className="group relative overflow-hidden bg-slate-900 border border-slate-800 hover:border-amber-500 p-6 sm:p-10 rounded-3xl transition-all text-left"
+      >
+        <div className="relative z-10">
+          <span className="text-4xl sm:text-6xl mb-4 sm:mb-6 block">⚽</span>
+          <h2 className="text-xl sm:text-3xl font-bold">Football</h2>
+          <p className="text-slate-400 mt-2 text-sm sm:text-base">
+            World Cup Coverage
+          </p>
+        </div>
+
+        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all" />
+      </button>
+
+    </div>
+  </div>
+);
   }
 
   if (isLoadingStudio) {
-  return (
-    <div className="w-screen h-screen bg-[#020617] flex items-center justify-center overflow-hidden">
+return (
+  <div className="w-full min-h-screen bg-[#020617] flex items-center justify-center overflow-hidden px-4">
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#0f172a,#000)]" />
+    {/* Background */}
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#0f172a,#000)]" />
 
-      <div className="relative z-10 text-center">
+    {/* Content */}
+    <div className="relative z-10 text-center w-full max-w-md">
 
-        <div className="text-7xl mb-6">📡</div>
+      {/* Icon */}
+      <div className="text-5xl sm:text-6xl md:text-7xl mb-4 sm:mb-6">
+        📡
+      </div>
 
-        <h1 className="text-white text-6xl font-black">
-          SPORTS
-          <span className="text-emerald-500">CENTER</span>
-        </h1>
+      {/* Title */}
+      <h1 className="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-tight">
+        SPORTS
+        <span className="text-emerald-500">CENTER</span>
+      </h1>
 
-        <p className="text-emerald-400 mt-6 tracking-[0.4em] uppercase animate-pulse">
-          Connecting To Studio
-        </p>
+      {/* Subtitle */}
+      <p className="text-emerald-400 mt-4 sm:mt-6 tracking-[0.25em] sm:tracking-[0.4em] uppercase animate-pulse text-xs sm:text-sm md:text-base">
+        Connecting To Studio
+      </p>
 
-        <div className="mt-8 w-80 h-2 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-emerald-500 animate-pulse w-full" />
-        </div>
-
+      {/* Progress Bar */}
+      <div className="mt-6 sm:mt-8 w-full max-w-xs sm:max-w-sm md:w-80 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+        <div className="h-full bg-emerald-500 animate-pulse w-full" />
       </div>
 
     </div>
-  );
+  </div>
+);
 }
 
 if (!selectedMatch) {
   return (
-    <div className="w-full min-h-screen overflow-x-hidden bg-[#020617] text-white p-8">
-      <button
-        onClick={() => {
-          setSport(null);
-          setMatches([]);
-        }}
-        className="mb-8 bg-white/5 hover:bg-white/10 backdrop-blur-xl px-5 py-2 rounded-full border border-white/10"
-      >
-        ← Back to Menu
-      </button>
+  <div className="w-full min-h-screen overflow-x-hidden bg-[#020617] text-white px-4 py-6 sm:p-8">
 
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-4xl font-black uppercase">
-            {sport} Central
-          </h2>
-          <p className="text-slate-500">
-            Select a live feed to enter the studio
-          </p>
-        </div>
+    {/* Back Button */}
+    <button
+      onClick={() => {
+        setSport(null);
+        setMatches([]);
+      }}
+      className="mb-6 sm:mb-8 bg-white/5 hover:bg-white/10 backdrop-blur-xl px-4 sm:px-5 py-2 rounded-full border border-white/10 text-sm sm:text-base"
+    >
+      ← Back to Menu
+    </button>
 
-        <div className="flex gap-2 p-1 bg-white/5 rounded-xl">
-          {["en", "ta"].map((l) => (
-            <button
-              key={l}
-              onClick={() => setLanguage(l as "en" | "ta")}
-              className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest ${
-                language === l
-                  ? "bg-emerald-500 text-black"
-                  : "text-slate-400"
-              }`}
-            >
-              {l === "en" ? "English" : "Tamil"}
-            </button>
-          ))}
-        </div>
+    {/* Header */}
+    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6 sm:mb-8">
+
+      {/* Title */}
+      <div>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase">
+          {sport} Central
+        </h2>
+
+        <p className="text-slate-500 text-sm sm:text-base">
+          Select a live feed to enter the studio
+        </p>
       </div>
 
-      {/* Full Width Match Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-        {matches.map((match, idx) => (
+      {/* Language Switch */}
+      <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit">
+        {["en", "ta"].map((l) => (
           <button
-            key={match.id}
-            onClick={() => handleMatchSelect(idx)}
-            className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-emerald-500/50 transition-all"
+            key={l}
+            onClick={() => setLanguage(l as "en" | "ta")}
+            className={`px-4 sm:px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition ${
+              language === l
+                ? "bg-emerald-500 text-black"
+                : "text-slate-400"
+            }`}
           >
-            <div className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-2">
-              {match.competition}
-            </div>
-
-            <div className="text-xl font-bold">
-              {match.homeTeam}
-            </div>
-
-            <div className="text-center text-slate-500 py-2">
-              VS
-            </div>
-
-            <div className="text-xl font-bold">
-              {match.awayTeam}
-            </div>
-
-            <div className="flex justify-between items-center mt-6">
-              <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded">
-                {match.status}
-              </span>
-
-              <span className="font-mono">
-                {match.score}
-              </span>
-            </div>
+            {l === "en" ? "English" : "Tamil"}
           </button>
         ))}
       </div>
     </div>
-  );
+
+    {/* Match Grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+
+      {matches.map((match, idx) => (
+        <button
+          key={match.id}
+          onClick={() => handleMatchSelect(idx)}
+          className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 text-left hover:bg-white/10 hover:border-emerald-500/50 transition-all"
+        >
+          <div className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-2">
+            {match.competition}
+          </div>
+
+          <div className="text-lg sm:text-xl font-bold">
+            {match.homeTeam}
+          </div>
+
+          <div className="text-center text-slate-500 py-2 text-sm sm:text-base">
+            VS
+          </div>
+
+          <div className="text-lg sm:text-xl font-bold">
+            {match.awayTeam}
+          </div>
+
+          <div className="flex justify-between items-center mt-4 sm:mt-6">
+            <span className="text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded">
+              {match.status}
+            </span>
+
+            <span className="font-mono text-sm sm:text-base">
+              {match.score}
+            </span>
+          </div>
+        </button>
+      ))}
+
+    </div>
+  </div>
+);
 }
 
-  return (
-    <div className="w-screen h-screen bg-black relative overflow-hidden font-sans">
-      {/* Upper HUD UI */}
-      <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-50 pointer-events-none">
-        <button 
-          onClick={() => { setSelectedMatch(null); setBroadcastSegments([]); window.speechSynthesis.cancel(); }}
-          className="pointer-events-auto bg-white/5 backdrop-blur-2xl border border-white/10 text-white px-6 py-2 rounded-full text-xs font-black tracking-widest hover:bg-emerald-500 hover:text-black transition-all"
+return (
+  <div className="w-full min-h-screen bg-black relative overflow-hidden font-sans">
+
+    {/* Safe area wrapper for mobile */}
+    <div className="absolute inset-0 flex flex-col">
+
+      {/* ================= HUD TOP ================= */}
+      <div className="absolute top-0 left-0 w-full p-3 sm:p-6 md:p-8 flex justify-between items-start z-50 pointer-events-none">
+
+        <button
+          onClick={() => {
+            setSelectedMatch(null);
+            setBroadcastSegments([]);
+            window.speechSynthesis.cancel();
+          }}
+          className="pointer-events-auto bg-white/5 backdrop-blur-2xl border border-white/10 text-white px-3 sm:px-5 md:px-6 py-2 rounded-full text-[10px] sm:text-xs font-black tracking-widest hover:bg-emerald-500 hover:text-black transition-all"
         >
           DISCONNECT FEED
         </button>
-        
-        
+
       </div>
 
-      {/* Broadcast Ticker */}
-      <div className="absolute bottom-0 left-0 w-full bg-emerald-600 h-10 flex items-center overflow-hidden z-50 border-t border-emerald-400/30">
-        <div className="bg-black h-full px-6 flex items-center z-10 shadow-[10px_0_20px_rgba(0,0,0,0.5)]">
-            <span className="text-white font-black italic tracking-tighter text-sm">BREAKING</span>
-        </div>
-        <div className="whitespace-nowrap align-center flex animate-marquee text-black font-black text-sm items-center">
-          {[...Array(1)].map((_, i) => (
-            <span key={i} className="mx-12 uppercase flex items-center gap-4">
-               {selectedMatch.competition} • LIVE IN {language === 'en' ? 'ENGLISH' : 'TAMIL'} • {selectedMatch.homeTeam} VS {selectedMatch.awayTeam} • AI ANALYSIS IN PROGRESS •
-            </span>
+      {/* ================= 3D SCENE WRAPPER ================= */}
+      <div className="flex-1 w-full h-full">
+        <Canvas shadows dpr={[1, 2]}>
+          <Environment preset="night" />
+          <CinematicCamera activeSpeaker={activeSpeaker} />
+
+          <ProfessionalStudio sport={sport} />
+
+          {SPEAKER_POSITIONS.map((p, i) => (
+            <group
+              key={i}
+              position={[p.targetX, 0, p.z]}
+              rotation={[0, p.angle, 0]}
+            >
+              <RealisticPresenter
+                suitColor={p.suit}
+                shirtColor={p.shirt}
+                hairColor={p.hair}
+                role={p.role}
+                isSpeaking={activeSpeaker === p.id}
+                targetPos={{
+                  x: p.targetX,
+                  z: p.z
+                }}
+              />
+            </group>
           ))}
-        </div>
+
+          <ContactShadows opacity={0.6} scale={30} blur={2} far={10} />
+        </Canvas>
       </div>
 
-      {/* 3D Main Scene */}
-      <Canvas shadows dpr={[1, 2]}>
-        <Environment preset="night" />
-        <CinematicCamera activeSpeaker={activeSpeaker} />
-        
-        <ProfessionalStudio sport={sport} />
-        
-      {SPEAKER_POSITIONS.map((p, i) => {
-
-  return (
-    <group
-      key={i}
-      position={[p.targetX, 0, p.z]}
-      rotation={[0, p.angle, 0]}
-    >
-      <RealisticPresenter
-        suitColor={p.suit}
-        shirtColor={p.shirt}
-        hairColor={p.hair}
-        role={p.role}
-        isSpeaking={activeSpeaker === p.id}
-        targetPos={{
-          x: p.targetX,
-          z: p.z
-        }}
-      />
-    </group>
-  );
-})}
-
-        <ContactShadows opacity={0.6} scale={30} blur={2} far={10} />
-      </Canvas>
-
-      {/* Dynamic Subtitle / Nameplate Overlay */}
+      {/* ================= SPEAKER NAME ================= */}
       {activeSpeaker && (
-  <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50">
-    <div className="bg-black/80 backdrop-blur-xl px-8 py-3 rounded-full border border-emerald-500 shadow-2xl">
-      <div className="text-emerald-400 text-sm font-black uppercase tracking-[0.3em] text-center">
-        {SPEAKER_POSITIONS.find(s => s.id === activeSpeaker)?.name}
-      </div>
-    </div>
+        <div className="absolute bottom-16 sm:bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 z-50 px-2">
+          <div className="bg-black/80 backdrop-blur-xl px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full border border-emerald-500 shadow-2xl">
+            <div className="text-emerald-400 text-[10px] sm:text-sm font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-center">
+              {SPEAKER_POSITIONS.find(s => s.id === activeSpeaker)?.name || "SPEAKER"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= TICKER ================= */}
+    <div className="absolute bottom-0 left-0 w-full bg-emerald-600 h-8 sm:h-10 flex items-center overflow-hidden z-50 border-t border-emerald-400/30 pb-[env(safe-area-inset-bottom)]">
+
+  {/* BREAKING LABEL */}
+  <div className="bg-black h-full px-2 sm:px-6 flex items-center z-10 shrink-0">
+    <span className="text-white font-black italic tracking-tighter text-[10px] sm:text-sm">
+      BREAKING
+    </span>
   </div>
-)}
+
+  {/* MARQUEE */}
+  <div className="flex-1 overflow-hidden whitespace-nowrap">
+
+    <div className="inline-flex animate-marquee text-black font-black items-center">
+
+      {/* 🔥 MOBILE SHORT VERSION */}
+      <span className="sm:hidden mx-4 uppercase text-[10px] leading-none">
+        {(selectedMatch?.homeTeam ?? "HOME")} vs {(selectedMatch?.awayTeam ?? "AWAY")} •
+        LIVE • {language === "en" ? "EN" : "TA"} • AI ANALYSIS
+      </span>
+
+      {/* 💻 DESKTOP FULL VERSION */}
+      <span className="hidden sm:flex mx-20 uppercase gap-4 text-sm leading-none">
+        {(selectedMatch?.competition ?? "LIVE")} •
+        LIVE IN {(language === "en" ? "ENGLISH" : "TAMIL")} •
+        {(selectedMatch?.homeTeam ?? "HOME")} VS {(selectedMatch?.awayTeam ?? "AWAY")} •
+        AI ANALYSIS IN PROGRESS •
+      </span>
+
     </div>
-  );
+
+  </div>
+
+</div>
+
+    </div>
+
+  </div>
+);
 }
