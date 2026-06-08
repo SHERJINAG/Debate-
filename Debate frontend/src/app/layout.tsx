@@ -14,7 +14,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MedaiTV - BharatVerse AI",
-  description: "Experience the future of news with BharatVerse AI's MedaiTV - a cutting-edge platform delivering real-time, AI-generated news content in an immersive virtual studio environment. Stay informed with dynamic visuals, interactive features, and personalized news tailored to your interests. Welcome to the next generation of news consumption.",
+  description:
+    "Experience the future of news with BharatVerse AI's MedaiTV - a cutting-edge platform delivering real-time, AI-generated news content in an immersive virtual studio environment.",
+
+    icons: {
+    icon: [
+      { url: "/favicons.png", type: "image/png" }
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +34,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+      </body>
     </html>
   );
 }
