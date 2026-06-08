@@ -6,8 +6,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 from google.api_core import exceptions
+from sports import (
+    get_football_wc_list,
+    get_cricket_matches,
+    get_sports_broadcast,
+    BroadcastRequest,
+    ScorecardRequest,
+    get_cricket_scorecard
+)
 
-app = FastAPI(title="Hyper-Realistic Tamil TV Debate Studio Engine (Dynamic Universal Prompt)")
+
+app = FastAPI(title="Hyper-Realistic Tamil TV Media Network Production Server")
 
 # --- CONFIGURE ROBUST CORS MIDDLEWARE ---
 app.add_middleware(
@@ -18,46 +27,72 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure Gemini API Key
+# Configure Gemini API Key explicitly forcing the REST protocol transport layers
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_KEY")
-genai.configure(api_key=GOOGLE_API_KEY)
+genai.configure(api_key=GOOGLE_API_KEY, transport="rest") # <-- CRUCIAL: Fixes SSL/Decryption crashes
 
 class DebateRequest(BaseModel):
     topic: str
 
+class NewsRequest(BaseModel):
+    category: str  # "tamil-nadu" | "india" | "global" | "sports" | "tech"
+
 # --- REUSABLE GENERATION HELPER WITH MODEL FALLBACK ---
+import time
+import random
+
 def generate_debate_with_fallback(prompt: str):
     """
-    Attempts generation with Gemini 3.5 Flash, 3.1 Flash Lite, or 2.5 Flash.
+    Attempts generation across free tier models with automated exponential backoff 
+    to absorb 429 Rate Limit (Quota Exceeded) spikes gracefully.
     """
-    models_to_try = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash']
+    # Optimized list of valid active stable free-tier endpoints
+    models_to_try = [ 'gemini-3.1-flash-lite','gemini-3.5-flash', 'gemini-2.5-flash']
+    
+    max_retries = 3
+    base_delay = 5  # Initial structural pause window in seconds
     
     for model_name in models_to_try:
-        try:
-            print(f"Attempting script generation via: {model_name}...")
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            return response.text
-        except exceptions.ResourceExhausted as e:
-            print(f"Warning: Rate limit reached on {model_name}. details: {str(e)}")
-            if model_name == models_to_try[-1]:
+        retries = 0
+        while retries <= max_retries:
+            try:
+                print(f"Attempting script generation via: {model_name} (Attempt {retries + 1})...")
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                return response.text
+                
+            except exceptions.ResourceExhausted as e:
+                # Catch 429 Quota/Rate limits cleanly
+                retries += 1
+                if retries > max_retries:
+                    print(f"Rate limit hard-cap reached for {model_name}. Cascading down to next backup model...")
+                    break  # Break out of the retry loop, fall through to the next model in the outer loop
+                
+                # Calculate exponential backoff delay with a random jitter element to prevent stampeding
+                delay = (base_delay * (2 ** retries)) + random.uniform(0, 2)
+                print(f"⚠️ 429 Quota Exceeded on {model_name}. Retrying in {delay:.2f} seconds...")
+                time.sleep(delay)
+                
+            except Exception as e:
+                # If it's a structural syntax error or structural failure, raise it immediately
+                print(f"Unhandled operational crash encountered: {str(e)}")
                 raise e
-            print("Switching over to fallback model cluster...")
-            continue
-        except Exception as e:
-            raise e
+                
+    # If the thread runs completely out of both models and retries
+    raise HTTPException(
+        status_code=429,
+        detail="All free-tier model clusters are currently rate-limited. Please wait 45 seconds and refresh the dashboard."
+    )
 
-# --- CORE API ROUTE ---
+# --- CHANNEL 1: 3D DEBATE ARENA ROUTE ---
 @app.post("/api/studio/process-debate")
 async def process_debate_session(request: DebateRequest):
     try:
-        # Dynamic date context insertion to keep real-world timelines accurate
         current_date_context = datetime.now().strftime("%B %Y")
         
-        # UNIVERSAL SYSTEM PROMPT (Handles any given topic dynamically)
         system_orchestration_prompt = f"""
         You are the chief director for an elite, high-intensity live Tamil TV News Debate program (பாணியில் விவாத மேடை).
         Generate a deeply engaging, aggressive, and fast-paced script written entirely in conversational, media-style spoken Tamil (தமிழ்).
@@ -68,20 +103,20 @@ async def process_debate_session(request: DebateRequest):
         "{request.topic}"
         
         STRICT BEHAVIORAL & QUESTIONING RULES:
-        1. UNIVERSAL ADAPTABILITY: Analyze the provided topic. Identify the core friction point (whether it is political, social, financial, local, or systemic) and build highly relevant, contrasting arguments around it.
-        2. HIGH ATTACK & AGGRESSION: The Attacker/Opposer (Speaker 5) must be highly interrogative. They must ask sharp, direct, biting, consecutive questions to the Supporter (Speaker 2) instead of giving calm, passive monologues.
-        3. NATURAL TAMIL INTERRUPTIONS: To maintain a live broadcast energy, speakers must aggressively cut each other off or start their turns with combative dialogue markers (e.g., "இருங்க இருங்க!", "கேள்விக்கு பதில் சொல்லுங்க!", "என்னங்க பேசுறீங்க?!", "நியாயமே இல்லை!").
-        4. TEXT LENGTH SPECIFICATION: Each speaker's response must be a solid, descriptive monologue (aim for roughly 100-180 words per turn) delivered passionately.
-        5. LANGUAGE TONE: Use colloquial media-style Tamil as heard on leading 24/7 news channels (e.g., 'நிஜமாவே', 'யோசிச்சு பாருங்க', 'ஆதாரத்தோட பேசுங்க').
+        1. UNIVERSAL ADAPTABILITY: Identify the core friction point and build highly relevant, contrasting arguments around it.
+        2. HIGH ATTACK & AGGRESSION: The Attacker (Speaker 5) must fire sharp, direct, biting consecutive questions to the Supporter (Speaker 2).
+        3. NATURAL TAMIL INTERRUPTIONS: Speakers must aggressively cut each other off or start their turns with combative dialogue markers (e.g., "இருங்க இருங்க!", "கேள்விக்கு பதில் சொல்லுங்க!").
+        4. TEXT LENGTH SPECIFICATION: Each speaker's response must be a solid, descriptive monologue (aim for roughly 100-180 words per turn).
+        5. LANGUAGE TONE: Use colloquial media-style Tamil as heard on leading 24/7 news channels.
         
         STRICT POSITION MATRIX (Exactly 7 entries in chronological order):
-        1. Speaker 3 (Anchor): Delivers a dramatic, theatrical intro framing the core conflict of the topic, introducing the guests, and laying out why this is a massive issue for the public right now.
-        2. Speaker 2 (Supported Guest): Defends the core premise of the topic passionately, using strong ideological, practical, or policy-based justifications.
-        3. Speaker 5 (Opposite Guest/Attacker): Interrupts fiercely! Fires back with an aggressive rebuttal, challenging Speaker 2 with a rapid volley of critical questions demanding accountability.
-        4. Speaker 4 (Neutral Expert): Breaks down the data or structural parameters calmly. Evaluates the ground realities, logistics, and legal or economic constraints without taking sides.
-        5. Speaker 1 (Public Voice Pro): Real-world community perspective, offering everyday grass-roots support or a personal narrative backing the concept.
-        6. Speaker 6 (Public Voice Anti): Expresses frustration or localized skepticism about how the decision impacts the average citizen, calling out optics vs reality.
-        7. Speaker 3 (Anchor): Restores order over the shouting panel, cuts off cross-talk, summarizes the high stakes, and delivers a professional closing statement.
+        1. Speaker 3 (Anchor): Dramatic, theatrical intro framing the core conflict.
+        2. Speaker 2 (Supported Guest): Defends the core premise of the topic passionately.
+        3. Speaker 5 (Opposite Guest/Attacker): Rebuts fiercely with critical tracking queries.
+        4. Speaker 4 (Neutral Expert): Breaks down ground realities and logistical parameters calmly.
+        5. Speaker 1 (Public Voice Pro): Grassroots community perspective supporting the view.
+        6. Speaker 6 (Public Voice Anti): Localized skepticism calling out structural problems.
+        7. Speaker 3 (Anchor): Restores structural order, cuts off cross-talk, and closes the panel.
 
         Output MUST be a valid JSON array without any markdown syntax wraps, comments, or backticks.
         
@@ -98,7 +133,6 @@ async def process_debate_session(request: DebateRequest):
         
         for index, segment in enumerate(raw_script_data):
             speaker_id = int(segment["speaker_id"])
-            
             final_debate_timeline.append({
                 "sequence_index": index,
                 "speaker_id": speaker_id,
@@ -116,7 +150,7 @@ async def process_debate_session(request: DebateRequest):
         print(f"CRITICAL: All available Gemini Free Tier models have been exhausted. {str(quota_err)}")
         raise HTTPException(
             status_code=429,
-            detail="Gemini API Request Limits Exhausted across all operational models. Please wait a few minutes before regenerating."
+            detail="Gemini API Request Limits Exhausted. Please wait a few minutes before regenerating."
         )
     except json.JSONDecodeError:
         raise HTTPException(
@@ -127,6 +161,67 @@ async def process_debate_session(request: DebateRequest):
         print(f"System Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- CHANNEL 2: AUTOMATED AI TV NEWS CHANNEL ROUTE ---
+@app.post("/api/studio/process-news")
+async def process_news_channel(request: NewsRequest):
+    try:
+        current_date = datetime.now().strftime("%B %d, %Y")
+        
+        system_prompt = f"""
+        You are an elite AI TV News Producer. Current date: {current_date}.
+        Generate a comprehensive, high-impact news broadcast script in formal broadcast Tamil (தமிழ்) for category: "{request.category}".
+        
+        CRITICAL RULES:
+        1. You MUST generate EXACTLY 10 sequential news items.
+        2. Provide high-quality news content relevant to "{request.category}".
+        3. Match the sequence structure perfectly.
+
+        STRICT SCRIPT STRUCTURAL SEQUENCE (Generate exactly 10 distinct elements, indexes 0 to 9):
+        - Index 0: Headline Overview (Camera: "HEADLINE_ZOOM")
+        - Index 1 to 8: Alternating deep reporting segments and statistical breakdowns (Camera: Alternate between "ANCHOR_DESK" and "GRAPHIC_PAN")
+        - Index 9: Comprehensive channel sign-off wrap up (Camera: "STUDIO_WIDE")
+
+        Output MUST be a raw valid JSON array. Do not include markdown code block wraps or backticks.
+        
+        Format Template:
+        [
+          {{"segment_index": 0, "camera_angle": "HEADLINE_ZOOM", "title": "தலைப்புச் செய்திகள்", "dialogue": "..."}},
+          {{"segment_index": 1, "camera_angle": "ANCHOR_DESK", "title": "தமிழக முக்கிய நிகழ்வுகள்", "dialogue": "..."}}
+        ]
+        """
+        raw_response = generate_debate_with_fallback(system_prompt)
+        return {
+            "success": True,
+            "category": request.category,
+            "broadcast_timeline": json.loads(raw_response)
+        }
+    except Exception as e:
+        print(f"News Route Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- SPORTS API ENDPOINTS ---
+
+@app.get("/api/sports/football")
+async def football_matches():
+    """Get FIFA World Cup matches"""
+    return await get_football_wc_list()
+
+@app.get("/api/sports/cricket")
+async def cricket_matches():
+    """Get cricket matches"""
+    return await get_cricket_matches()
+
+@app.post("/api/sports/broadcast")
+async def sports_broadcast(request: BroadcastRequest):
+    """Generate sports broadcast for selected match"""
+    return await get_sports_broadcast(request)
+
+@app.post("/api/sports/cricket-scorecard")
+async def cricket_scorecard(request: ScorecardRequest):
+    """Get cricket match scorecard"""
+    result = await get_cricket_scorecard(request.match_id)
+    return {"success": True, "scorecard": result}
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
