@@ -696,110 +696,136 @@ const starSportsTexture = useMemo(
 
 <group position={[0, 0, 2]}>
 
-  {/* DESK BODY SEGMENTS */}
+  {/* =======================
+      SINGLE CURVED DESK BODY
+  ======================= */}
 
-  {[...Array(24)].map((_, i) => {
-
-  const deskRadius = 5.5;
-  const deskCenterZ = 4.3;
-  const deskSweepAngle = 1.2;
-
-  const t = i / 23;
-
-  const angle =
-    -deskSweepAngle / 2 +
-    t * deskSweepAngle;
-
-  const x =
-    Math.sin(angle) *
-    deskRadius;
-
-  const z =
-    deskCenterZ -
-    Math.cos(angle) *
-    deskRadius;
-
-  return (
-    <group
-      key={i}
-      position={[x, 0, z]}
-      rotation={[0, angle, 0]}
-    >
-
-      {/* Main Desk Segment */}
-
-      <mesh position={[0, 0.42, 0]}>
-        <boxGeometry args={[1.15, 0.85, 0.7]} />
-        <meshStandardMaterial
-          color="#311b0b"
-          roughness={0.22}
-          metalness={0.12}
-        />
-      </mesh>
-
-      {/* Upper LED */}
-
-      <mesh position={[0, 0.72, 0.36]}>
-        <boxGeometry args={[1.16, 0.04, 0.04]} />
-        <meshBasicMaterial color="#00f0ff" />
-      </mesh>
-
-      {/* Lower LED */}
-
-      <mesh position={[0, 0.58, 0.36]}>
-        <boxGeometry args={[1.16, 0.04, 0.04]} />
-        <meshBasicMaterial color="#00f0ff" />
-      </mesh>
-
-    </group>
-  );
-})}
-
-  {/* CONTINUOUS GLASS TOP */}
-
-  <mesh
-    position={[0, 0.92, -0.05]}
-    rotation={[0, Math.PI, 0]}
-  >
-    <cylinderGeometry
+  <mesh position={[0, 0.42, 4.3]} rotation={[-Math.PI / 2, 0, 0]}>
+    <extrudeGeometry
       args={[
-        5.55,
-        5.55,
-        0.08,
-        128,
-        1,
-        true,
-        Math.PI * 0.2,
-        Math.PI * 0.6
+        (() => {
+          const shape = new THREE.Shape();
+
+          const radius = 5.5;
+          const start = -0.6;
+          const end = 0.6;
+          const steps = 120;
+
+          for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const angle = start + t * (end - start);
+
+            const x = Math.sin(angle) * radius;
+            const y = Math.cos(angle) * radius;
+
+            if (i === 0) shape.moveTo(x, y);
+            else shape.lineTo(x, y);
+          }
+
+          return shape;
+        })(),
+        {
+          depth: 0.85,
+          bevelEnabled: false,
+        },
       ]}
+    />
+
+    <meshStandardMaterial
+      color="#311b0b"
+      roughness={0.25}
+      metalness={0.15}
+    />
+  </mesh>
+
+  {/* =======================
+      CONTINUOUS GLASS TOP
+  ======================= */}
+
+  <mesh position={[0, 0.92, 4.3]}>
+    <cylinderGeometry
+      args={[5.55, 5.55, 0.08, 256, 1, true, -0.6, 1.2]}
     />
 
     <meshPhysicalMaterial
       color="#082f49"
       transparent
-      opacity={0.65}
-      roughness={0.03}
-      metalness={0.95}
+      opacity={0.6}
+      roughness={0.02}
+      metalness={0.9}
       transmission={1}
       thickness={0.6}
       side={THREE.DoubleSide}
     />
   </mesh>
 
-  {/* STAR SPORTS LOGO */}
+  {/* =======================
+      LED STRIP (TOP EDGE - FIXED)
+  ======================= */}
 
-  <group position={[0, 0.55, 0.8]}
-   >
+  <mesh position={[0, 0.78, 4.3]}>
+    <cylinderGeometry
+      args={[5.52, 5.52, 0.03, 256, 1, true, -0.6, 1.2]}
+    />
 
-    <mesh >
-      <planeGeometry args={[2.8, 1.2]} />
-      <meshBasicMaterial
-        map={starSportsTexture}
-        transparent
-      />
+    <meshBasicMaterial color="#00f0ff" />
+  </mesh>
+
+  {/* =======================
+      LED STRIP (BOTTOM EDGE - FIXED)
+  ======================= */}
+
+  <mesh position={[0, 0.62, 4.3]}>
+    <cylinderGeometry
+      args={[5.52, 5.52, 0.03, 256, 1, true, -0.6, 1.2]}
+    />
+
+    <meshBasicMaterial color="#00f0ff" />
+  </mesh>
+
+  {/* =======================
+      STAR SPORTS LOGO
+  ======================= */}
+
+  <mesh position={[0, 0.55, -0.2]}>
+    <planeGeometry args={[3, 1.3]} />
+
+    <meshBasicMaterial
+      map={starSportsTexture}
+      transparent
+    />
+  </mesh>
+
+  {/* =======================
+      REALISTIC DESK OBJECTS
+  ======================= */}
+
+  {/* LAPTOP (center-left) */}
+  <group position={[-1.6, 1.33, -0.6]} rotation={[0, 2.9, 0]}>
+    <mesh>
+      <boxGeometry args={[0.8, 0.05, 0.5]} />
+      <meshStandardMaterial color="#111111" metalness={0.8} roughness={0.3} />
     </mesh>
-
+    <mesh position={[0, 0.25, -0.2]}>
+      <boxGeometry args={[0.8, 0.35, 0.02]} />
+      <meshStandardMaterial color="#0a0a0a" />
+    </mesh>
   </group>
+
+  {/* WATER BOTTLE */}
+  
+
+  {/* PAPERS STACK */}
+  <mesh position={[0.5, 1.33, -0.55]} rotation={[0, 0.2, 0]}>
+    <boxGeometry args={[0.6, 0.02, 0.8]} />
+    <meshStandardMaterial color="#eaeaea" />
+  </mesh>
+
+  {/* TABLE MIC */}
+  
+
+  {/* TABLET */}
+  
 
 </group>
 
@@ -840,7 +866,7 @@ const starSportsTexture = useMemo(
 <group position={[-14, 5, -8]}>
   <mesh castShadow>
     <boxGeometry args={[1, 10, 2]} />
-    <meshStandardMaterial color="#111111" />
+    <meshStandardMaterial color="#3c51cc" />
   </mesh>
 </group>
 
@@ -1166,38 +1192,54 @@ function RealisticPresenter({
  */
 function CinematicCamera({ activeSpeaker }: { activeSpeaker: number | null }) {
   const { camera } = useThree();
+   const { size } = useThree();
 
-  const defaultPos = new THREE.Vector3(0, 4, 10); // higher + safer
+  const isMobile = size.width < 768;
+  const defaultPos = new THREE.Vector3(0, 3.5, 8);
   const defaultLook = new THREE.Vector3(0, 1.5, 0);
 
-  // ✅ IMPORTANT: set initial camera position ONCE
   useEffect(() => {
     camera.position.copy(defaultPos);
     camera.lookAt(defaultLook);
   }, [camera]);
 
   useFrame((state) => {
-    const targetPos = new THREE.Vector3(0, 4, 10);
+    const targetPos = new THREE.Vector3(0, 3.5, 8);
     const targetLook = new THREE.Vector3(0, 1.5, 0);
 
     if (activeSpeaker !== null) {
-      const speaker = SPEAKER_POSITIONS.find(s => s.id === activeSpeaker);
+      const speaker = SPEAKER_POSITIONS.find(
+        (s) => s.id === activeSpeaker
+      );
 
       if (speaker) {
-        // tighter broadcast framing
-        targetPos.set(speaker.targetX * 0.8, 2.8, 6);
-        targetLook.set(speaker.targetX, 1.5, speaker.z);
+        // Close-up broadcast shot
+        targetPos.set(
+          speaker.targetX * 0.95,
+          2.0,
+          4.5 // closer than 6
+        );
+
+        targetLook.set(
+          speaker.targetX,
+          1.6,
+          speaker.z
+        );
       }
     } else {
-      // slow cinematic studio orbit
-      targetPos.x = Math.sin(state.clock.elapsedTime * 0.1) * 3;
+      targetPos.x = Math.sin(state.clock.elapsedTime * 0.1) * 2;
     }
 
-    camera.position.lerp(targetPos, 0.04);
+    camera.position.lerp(targetPos, 0.06);
     camera.lookAt(targetLook);
   });
 
-  return <PerspectiveCamera makeDefault fov={35} />;
+  return (
+    <PerspectiveCamera
+      makeDefault
+      fov={isMobile ? 80 : 30}
+    />
+  );
 }
 
 export default function SportsCenterDashboard({ onExit }: SportsCenterDashboardProps) {
@@ -1282,7 +1324,7 @@ setTimeout(() => {
       onClick={onExit}
       className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-slate-900/80 hover:bg-slate-800 px-3 sm:px-4 py-2 rounded-lg border border-slate-700 transition-all text-sm sm:text-base z-50"
     >
-      ← Back
+    <span className="text-emerald-400">  ← Back</span>
     </button>
 
     {/* Header */}
@@ -1292,7 +1334,7 @@ setTimeout(() => {
         Broadcast Portal
       </div>
 
-      <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter">
+      <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter from-yellow-400 to-orange-500 bg-gradient-to-r bg-clip-text text-transparent">
         SPORTS<span className="text-emerald-500">CENTER</span>
       </h1>
     </div>
@@ -1307,7 +1349,9 @@ setTimeout(() => {
       >
         <div className="relative z-10">
           <span className="text-4xl sm:text-6xl mb-4 sm:mb-6 block">🏏</span>
-          <h2 className="text-xl sm:text-3xl font-bold">Cricket</h2>
+             <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+  Cricket
+</h2>
           <p className="text-slate-400 mt-2 text-sm sm:text-base">
             Live Analysis & Commentary
           </p>
@@ -1323,7 +1367,9 @@ setTimeout(() => {
       >
         <div className="relative z-10">
           <span className="text-4xl sm:text-6xl mb-4 sm:mb-6 block">⚽</span>
-          <h2 className="text-xl sm:text-3xl font-bold">Football</h2>
+          <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+  Football
+</h2>
           <p className="text-slate-400 mt-2 text-sm sm:text-base">
             World Cup Coverage
           </p>
@@ -1545,15 +1591,15 @@ return (
       {/* 🔥 MOBILE SHORT VERSION */}
       <span className="sm:hidden mx-4 uppercase text-[10px] leading-none">
         {(selectedMatch?.homeTeam ?? "HOME")} vs {(selectedMatch?.awayTeam ?? "AWAY")} •
-        LIVE • {language === "en" ? "EN" : "TA"} • AI ANALYSIS
+        LIVE • {language === "en" ? "EN" : "TA"}
       </span>
 
       {/* 💻 DESKTOP FULL VERSION */}
       <span className="hidden sm:flex mx-20 uppercase gap-4 text-sm leading-none">
         {(selectedMatch?.competition ?? "LIVE")} •
         LIVE IN {(language === "en" ? "ENGLISH" : "TAMIL")} •
-        {(selectedMatch?.homeTeam ?? "HOME")} VS {(selectedMatch?.awayTeam ?? "AWAY")} •
-        AI ANALYSIS IN PROGRESS •
+        {(selectedMatch?.homeTeam ?? "HOME")} VS {(selectedMatch?.awayTeam ?? "AWAY")} 
+        
       </span>
 
     </div>
