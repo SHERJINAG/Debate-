@@ -800,27 +800,6 @@ const starSportsTexture = useMemo(
       REALISTIC DESK OBJECTS
   ======================= */}
 
-  {/* LAPTOP (center-left) */}
-  <group position={[-1.6, 1.33, -0.6]} rotation={[0, 2.9, 0]}>
-    <mesh>
-      <boxGeometry args={[0.8, 0.05, 0.5]} />
-      <meshStandardMaterial color="#111111" metalness={0.8} roughness={0.3} />
-    </mesh>
-    <mesh position={[0, 0.25, -0.2]}>
-      <boxGeometry args={[0.8, 0.35, 0.02]} />
-      <meshStandardMaterial color="#0a0a0a" />
-    </mesh>
-  </group>
-
-  {/* WATER BOTTLE */}
-  
-
-  {/* PAPERS STACK */}
-  <mesh position={[0.5, 1.33, -0.55]} rotation={[0, 0.2, 0]}>
-    <boxGeometry args={[0.6, 0.02, 0.8]} />
-    <meshStandardMaterial color="#eaeaea" />
-  </mesh>
-
   {/* TABLE MIC */}
   
 
