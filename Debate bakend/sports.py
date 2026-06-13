@@ -57,116 +57,71 @@ def generate_broadcast_script(prompt: str) -> str:
 # REAL-TIME SPORTS DATA ACQUISITION LAYERS
 # ==========================================
 
+from datetime import datetime
+import httpx
+
+WORLD_CUP_API = "https://worldcup26.ir/api/v1/matches"
+
+
 async def get_football_wc():
-    """Fetches ONLY FIFA World Cup matches using competition ID 2000."""
-    headers = {"X-Auth-Token": FOOTBALL_API_KEY}
-    now = datetime.now()
-    start_date = (now - timedelta(days=3)).strftime('%Y-%m-%d')
-    end_date = (now + timedelta(days=7)).strftime('%Y-%m-%d')
-    
-    url = f"https://api.football-data.org/v4/matches?competitions=2000&dateFrom={start_date}&dateTo={end_date}"
+    """Get World Cup matches."""
+
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get(url, headers=headers, timeout=10.0)
+            res = await client.get(WORLD_CUP_API, timeout=10.0)
             data = res.json()
-            
-            if "matches" not in data:
-                return []
-                
-            matches = data.get("matches", [])
-            filtered_matches = []
-            
+
+            matches = data.get("games", [])
+
+            formatted = []
+
             for m in matches:
-                filtered_matches.append({
-                    "id": m["id"],
-                    "homeTeam": m["homeTeam"]["name"],
-                    "awayTeam": m["awayTeam"]["name"],
-                    "status": m["status"], 
-                    "score": f"{m['score']['fullTime']['home']} - {m['score']['fullTime']['away']}" if m['score']['fullTime'].get('home') is not None else "Match Not Played Yet",
-                    "competition": m["competition"]["name"],
-                    "date": m["utcDate"]
+                formatted.append({
+                    "id": int(m["id"]),
+                    "homeTeam": m["home_team_name_en"],
+                    "awayTeam": m["away_team_name_en"],
+                    "score": f"{m['home_score']} - {m['away_score']}",
+                    "date": m["local_date"],
+                    "group": m["group"],
+                    "status": m["finished"]
                 })
-                    
-            return filtered_matches[:15]
-        except Exception as e:
-            print(f"Error fetching World Cup data: {e}")
-            return []
-        
-async def get_football_match_stats(match_id: int):
-    headers = {"X-Auth-Token": FOOTBALL_API_KEY}
 
-    url = f"https://api.football-data.org/v4/matches/{match_id}"
+            return formatted
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return []
+
+
+async def get_goal_scorers(match_id: int):
+    """Get goal scorers for a match."""
 
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get(url, headers=headers, timeout=10.0)
+            res = await client.get(WORLD_CUP_API, timeout=10.0)
             data = res.json()
 
-            match = data.get("match", {})
+            matches = data.get("games", [])
 
-            stats = {
-                "homeTeam": match.get("homeTeam", {}).get("name"),
-                "awayTeam": match.get("awayTeam", {}).get("name"),
-                "score": match.get("score", {}),
-                "possession": match.get("statistics", []),
-                "goals": match.get("goals", []),
-                "lineups": match.get("lineups", []),
-                "penalties": match.get("penalties", []),
-            }
+            for m in matches:
+                if int(m["id"]) == match_id:
+                    return {
+                        "homeTeam": m["home_team_name_en"],
+                        "awayTeam": m["away_team_name_en"],
+                        "homeScorers": m.get("home_scorers"),
+                        "awayScorers": m.get("away_scorers")
+                    }
 
-            return stats
-
-        except Exception as e:
-            print(f"Stats fetch error: {e}")
             return {}
-async def get_football_match_events(match_id: int):
-    headers = {"X-Auth-Token": FOOTBALL_API_KEY}
-
-    url = f"https://api.football-data.org/v4/matches/{match_id}"
-
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(url, headers=headers, timeout=10.0)
-            data = res.json()
-
-            match = data.get("match", {})
-
-            events = match.get("events", [])
-
-            formatted_events = []
-
-            for e in events:
-                formatted_events.append({
-                    "minute": e.get("minute"),
-                    "type": e.get("type"),
-                    "team": e.get("team", {}).get("name"),
-                    "player": e.get("player", {}).get("name"),
-                    "detail": e.get("detail")
-                })
-
-            return formatted_events
 
         except Exception as e:
-            print(f"Events fetch error: {e}")
-            return []
-        
+            print(f"Error: {e}")
+            return {}
 
-async def get_football_match_detail(match_id: int):
-    headers = {"X-Auth-Token": FOOTBALL_API_KEY}
 
-    url = f"https://api.football-data.org/v4/matches/{match_id}"
 
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(url, headers=headers, timeout=10.0)
-            data = res.json()
 
-            return data  # full raw match object
-
-        except Exception as e:
-            print(f"Error fetching match detail: {e}")
-            return None
-
+            
 async def get_cricket():
     url = f"https://api.cricapi.com/v1/cricScore?apikey={CRICKET_API_KEY}"
 
@@ -356,23 +311,12 @@ async def get_sports_broadcast(request: BroadcastRequest) -> dict:
     # ---------------- SCORECARD (CRICKET ONLY) ----------------
     if choice == "1" and selected.get("status") != "SCHEDULED":
         selected["scorecard_details"] = await get_cricket_scorecard(selected["id"])
-    match_detail = None
-    match_stats = None
-    match_events = None
-
-    if choice == "2":  # Football
-        match_detail = await get_football_match_detail(selected["id"])
-        match_stats = await get_football_match_stats(selected["id"])
-        match_events = await get_football_match_events(selected["id"])
-
     analysis_data = {
     "sport": sport_lbl,
     "match": selected,
-    "match_detail": match_detail if choice == "2" else None,
-    "match_stats": match_stats if choice == "2" else None,
-    "match_events": match_events if choice == "2" else None,
+    "goal_scorers": await get_goal_scorers(selected["id"]) if choice == "2" else {},
     "scorecard": selected.get("scorecard_details", {}) if choice == "1" else {}
-}
+    }
 
     # ---------------- STYLE INSTRUCTION ----------------
     style_instruction = ""
