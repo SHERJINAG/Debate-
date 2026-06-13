@@ -57,67 +57,82 @@ def generate_broadcast_script(prompt: str) -> str:
 # REAL-TIME SPORTS DATA ACQUISITION LAYERS
 # ==========================================
 
-from datetime import datetime
 import httpx
 
-WORLD_CUP_API = "https://worldcup26.ir/api/v1/matches"
+WORLD_CUP_URL = "https://worldcup26.ir/get/games"
+
+
+def parse_scorers(raw):
+    if not raw or str(raw).lower() == "null":
+        return []
+
+    text = str(raw)
+
+    for ch in ['{', '}', '[', ']', '"', '“', '”', '\\']:
+        text = text.replace(ch, '')
+
+    return [x.strip() for x in text.split(',') if x.strip()]
 
 
 async def get_football_wc():
-    """Get World Cup matches."""
-
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get(WORLD_CUP_API, timeout=10.0)
+            res = await client.get(WORLD_CUP_URL, timeout=15)
+
             data = res.json()
 
-            matches = data.get("games", [])
+            matches = data.get("games", data) if isinstance(data, dict) else data
 
-            formatted = []
+            result = []
 
-            for m in matches:
-                formatted.append({
-                    "id": int(m["id"]),
-                    "homeTeam": m["home_team_name_en"],
-                    "awayTeam": m["away_team_name_en"],
-                    "score": f"{m['home_score']} - {m['away_score']}",
-                    "date": m["local_date"],
-                    "group": m["group"],
-                    "status": m["finished"]
+            for m in matches[:20]:
+                result.append({
+                    "id": int(m.get("id", 0)),
+                    "homeTeam": m.get("home_team_name_en"),
+                    "awayTeam": m.get("away_team_name_en"),
+                    "score": f"{m.get('home_score')} - {m.get('away_score')}",
+                    "status": m.get("time_elapsed"),
+                    "date": m.get("local_date"),
+                    "group": m.get("group")
                 })
 
-            return formatted
+            return result
 
         except Exception as e:
-            print(f"Error: {e}")
+            print("World Cup fetch error:", e)
             return []
 
 
-async def get_goal_scorers(match_id: int):
-    """Get goal scorers for a match."""
 
+async def get_goal_scorers(match_id: int):
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get(WORLD_CUP_API, timeout=10.0)
+            res = await client.get(WORLD_CUP_URL, timeout=15)
+
             data = res.json()
 
-            matches = data.get("games", [])
+            matches = data.get("games", data) if isinstance(data, dict) else data
 
             for m in matches:
-                if int(m["id"]) == match_id:
+                if str(m.get("id")) == str(match_id):
+
                     return {
-                        "homeTeam": m["home_team_name_en"],
-                        "awayTeam": m["away_team_name_en"],
-                        "homeScorers": m.get("home_scorers"),
-                        "awayScorers": m.get("away_scorers")
+                        "homeTeam": m.get("home_team_name_en"),
+                        "awayTeam": m.get("away_team_name_en"),
+                        "score": f"{m.get('home_score')} - {m.get('away_score')}",
+                        "homeScorers": parse_scorers(
+                            m.get("home_scorers")
+                        ),
+                        "awayScorers": parse_scorers(
+                            m.get("away_scorers")
+                        )
                     }
 
             return {}
 
         except Exception as e:
-            print(f"Error: {e}")
+            print("Goal scorer error:", e)
             return {}
-
 
 
 
