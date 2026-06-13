@@ -74,33 +74,70 @@ def parse_scorers(raw):
     return [x.strip() for x in text.split(',') if x.strip()]
 
 
+
 async def get_football_wc():
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(WORLD_CUP_URL, timeout=15)
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(WORLD_CUP_URL)
 
-            data = res.json()
+            if response.status_code != 200:
+                return []
 
-            matches = data.get("games", data) if isinstance(data, dict) else data
+            data = response.json()
 
-            result = []
+            matches = (
+                data.get("games", data)
+                if isinstance(data, dict)
+                else data
+            )
 
-            for m in matches[:20]:
-                result.append({
+            # Sort matches by date
+            matches.sort(
+                key=lambda m: datetime.strptime(
+                    m.get("local_date", "12/31/2099 23:59"),
+                    "%m/%d/%Y %H:%M"
+                )
+            )
+
+            formatted_matches = []
+
+            for m in matches:
+                raw_status = str(
+                    m.get("time_elapsed", "")
+                ).lower()
+
+                if raw_status == "notstarted":
+                    status = "Not Started"
+                    score = "vs"
+
+                elif str(m.get("finished", "")).upper() == "TRUE":
+                    status = "Finished"
+                    score = f"{m.get('home_score')} - {m.get('away_score')}"
+
+                elif raw_status == "live":
+                    status = "Live"
+                    score = f"{m.get('home_score')} - {m.get('away_score')}"
+
+                else:
+                    status = raw_status.title()
+                    score = f"{m.get('home_score')} - {m.get('away_score')}"
+
+                formatted_matches.append({
                     "id": int(m.get("id", 0)),
-                    "homeTeam": m.get("home_team_name_en"),
-                    "awayTeam": m.get("away_team_name_en"),
-                    "score": f"{m.get('home_score')} - {m.get('away_score')}",
-                    "status": m.get("time_elapsed"),
+                    "homeTeam": m.get("home_team_name_en", "Unknown"),
+                    "awayTeam": m.get("away_team_name_en", "Unknown"),
                     "date": m.get("local_date"),
-                    "group": m.get("group")
+                    "group": m.get("group"),
+                    "status": status,
+                    "score": score
                 })
 
-            return result
+            return formatted_matches
 
-        except Exception as e:
-            print("World Cup fetch error:", e)
-            return []
+    except Exception as e:
+        print(f"World Cup fetch error: {e}")
+        return []
+
 
 
 
