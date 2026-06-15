@@ -177,10 +177,10 @@ function seededRandom(seed: number) {
   };
 }
 
-function StudioBackgroundSet() {
-  const screenTexture = useMemo(() => {
-    if (typeof window === "undefined") return null;
 
+  
+export default function StudioBackgroundSet() {
+  const screenTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 2048;
     canvas.height = 1024;
@@ -188,187 +188,112 @@ function StudioBackgroundSet() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // ==========================
-    // BACKGROUND
-    // ==========================
-    const bg = ctx.createLinearGradient(0, 0, 0, 1024);
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, 2048, 1024);
     bg.addColorStop(0, "#020617");
-    bg.addColorStop(0.5, "#08142c");
+    bg.addColorStop(0.5, "#0f172a");
     bg.addColorStop(1, "#020617");
 
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, 2048, 1024);
 
-    // Scan lines
-    for (let y = 0; y < 1024; y += 6) {
-      ctx.fillStyle = "rgba(255,255,255,0.02)";
-      ctx.fillRect(0, y, 2048, 1);
-    }
-
     // ==========================
     // LEFT STOCK SCREEN
     // ==========================
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(40, 180, 450, 620);
-
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth = 1;
-
-    for (let x = 40; x < 490; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 180);
-      ctx.lineTo(x, 800);
-      ctx.stroke();
-    }
-
-    for (let y = 180; y < 800; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(40, y);
-      ctx.lineTo(490, y);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = "#00ff88";
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-
-    const pts = [
-      [80, 720],
-      [120, 680],
-      [180, 650],
-      [240, 600],
-      [300, 610],
-      [360, 520],
-      [420, 420],
-      [470, 320]
-    ];
-
-    pts.forEach(([x, y], i) => {
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-
-    ctx.stroke();
+    ctx.fillStyle = "#071827";
+    ctx.fillRect(50, 180, 450, 600);
 
     ctx.fillStyle = "#00ff88";
-    ctx.font = "bold 40px Arial";
-    ctx.fillText("MARKET LIVE", 80, 140);
+    ctx.font = "bold 50px Arial";
+    ctx.fillText("MARKET", 120, 140);
+
+    ctx.strokeStyle = "#00ff88";
+    ctx.lineWidth = 8;
+
+    ctx.beginPath();
+    ctx.moveTo(80, 700);
+    ctx.lineTo(140, 650);
+    ctx.lineTo(220, 600);
+    ctx.lineTo(300, 500);
+    ctx.lineTo(380, 420);
+    ctx.lineTo(460, 300);
+    ctx.stroke();
 
     // ==========================
     // CENTER MEDIA TV
     // ==========================
-    const centerX = 1024;
+    ctx.fillStyle = "#0047ab";
+    ctx.fillRect(620, 250, 820, 180);
 
-    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.fillStyle = "white";
+    ctx.font = "bold 140px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("MEDIA", 1030, 380);
+
+    ctx.fillStyle = "#d40000";
+    ctx.fillRect(700, 470, 700, 180);
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 150px Arial";
+    ctx.fillText("TV", 1030, 610);
+
+    ctx.font = "bold 40px Arial";
+    ctx.fillText("AI NEWS. REAL IMPACT.", 1030, 720);
+
+    // Globe rings
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 4;
 
     ctx.beginPath();
-    ctx.arc(centerX, 500, 280, 0, Math.PI * 2);
+    ctx.arc(1030, 500, 320, 0, Math.PI * 2);
     ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(centerX, 500, 380, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // MEDIA PANEL
-    ctx.fillStyle = "#003da8";
-
-    roundRect(ctx, 670, 240, 700, 180, 20);
-    ctx.fill();
-
-    // RED SWOOSH
-    ctx.strokeStyle = "#ff2020";
-    ctx.lineWidth = 10;
-
-    ctx.beginPath();
-    ctx.moveTo(760, 340);
-    ctx.quadraticCurveTo(1020, 220, 1260, 310);
-    ctx.stroke();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center";
-    ctx.font = "bold 120px Arial";
-    ctx.fillText("MEDIA", centerX, 360);
-
-    // TV PANEL
-    ctx.fillStyle = "#d70000";
-
-    roundRect(ctx, 700, 450, 650, 190, 20);
-    ctx.fill();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 150px Arial";
-    ctx.fillText("TV", centerX - 30, 590);
-
-    // PLAY ICON
-    ctx.beginPath();
-    ctx.moveTo(1220, 500);
-    ctx.lineTo(1290, 545);
-    ctx.lineTo(1220, 590);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.font = "bold 34px Arial";
-    ctx.fillText(
-      "AI NEWS. REAL IMPACT.",
-      centerX,
-      720
-    );
 
     // ==========================
-    // RIGHT ANALYTICS SCREEN
+    // RIGHT ANALYTICS
     // ==========================
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(1560, 180, 450, 620);
+    ctx.fillStyle = "#071827";
+    ctx.fillRect(1550, 180, 450, 600);
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 40px Arial";
-    ctx.fillText("SURVEY DATA", 1630, 140);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 45px Arial";
+    ctx.fillText("SURVEY", 1660, 140);
 
-    const cx = 1720;
-    const cy = 470;
-    const r = 140;
-
-    const values = [40, 25, 20, 15];
-    const colors = [
-      "#2563eb",
-      "#dc2626",
-      "#16a34a",
-      "#facc15"
-    ];
+    const cx = 1730;
+    const cy = 430;
+    const r = 120;
 
     let start = 0;
 
-    values.forEach((value, i) => {
-      const end =
-        start + (Math.PI * 2 * value) / 100;
+    const sections = [
+      [40, "#2563eb"],
+      [30, "#ef4444"],
+      [20, "#22c55e"],
+      [10, "#facc15"],
+    ];
+
+    sections.forEach(([percent, color]) => {
+      const end = start + (Math.PI * 2 * percent) / 100;
 
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, r, start, end);
       ctx.closePath();
 
-      ctx.fillStyle = colors[i];
+      ctx.fillStyle = color;
       ctx.fill();
 
       start = end;
     });
 
-    // BAR CHART
-    const bars = [140, 220, 180, 260];
-
-    bars.forEach((h, i) => {
-      ctx.fillStyle = "#38bdf8";
-
-      ctx.fillRect(
-        1840 + i * 35,
-        760 - h,
-        25,
-        h
-      );
-    });
+    // Bars
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillRect(1860, 620, 30, -180);
+    ctx.fillRect(1910, 620, 30, -240);
+    ctx.fillRect(1960, 620, 30, -140);
 
     const texture = new THREE.CanvasTexture(canvas);
+
+    texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
 
     return texture;
@@ -378,39 +303,19 @@ function StudioBackgroundSet() {
     <group position={[0, 2.5, -6.5]}>
       <mesh>
         <planeGeometry args={[10.5, 4.5]} />
-        <meshStandardMaterial
+        <meshBasicMaterial
           map={screenTexture}
-          roughness={0.25}
-          metalness={0.1}
-          emissive="#ffffff"
-          emissiveIntensity={0.35}
+          toneMapped={false}
         />
       </mesh>
 
       <mesh position={[0, 0, -0.05]}>
         <boxGeometry args={[10.65, 4.65, 0.05]} />
-        <meshStandardMaterial
-          color="#0f172a"
-          roughness={0.4}
-        />
+        <meshStandardMaterial color="#111827" />
       </mesh>
     </group>
   );
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
+        }
 
 function HighGlossStageFloor() {
   return (
