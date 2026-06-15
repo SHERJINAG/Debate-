@@ -44,14 +44,14 @@ from google.api_core import exceptions
 from fastapi import HTTPException
 import random
 import time
-
-def generate_with_web_search(prompt: str):
+client = genai.Client()
+def generate_debate_with_fallback(prompt: str):
     """
     Generate Tamil news/debate content using Google Search grounding
     with automatic fallback and exponential backoff.
     """
     # Initialize the client once
-    client = genai.Client()
+    
     
     models = [
         "gemini-3.1-flash-lite",
