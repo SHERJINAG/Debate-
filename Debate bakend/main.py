@@ -46,65 +46,61 @@ import random
 import time
 
 def generate_with_web_search(prompt: str):
-"""
-Generate Tamil news/debate content using Google Search grounding
-with automatic fallback and exponential backoff.
-"""
+    """
+    Generate Tamil news/debate content using Google Search grounding
+    with automatic fallback and exponential backoff.
+    """
+    # Initialize the client once
+    client = genai.Client()
+    
+    models = [
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-2.5-flash"
+    ]
 
-models = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-1.5-flash"
-]
+    max_retries = 3
+    base_delay = 5
 
-max_retries = 3
-base_delay = 5
+    for model_name in models:
+        for attempt in range(max_retries + 1):
+            try:
+                print(f"Using {model_name} | Attempt {attempt + 1}")
 
-for model_name in models:
-
-    for attempt in range(max_retries + 1):
-
-        try:
-            print(f"Using {model_name} | Attempt {attempt+1}")
-
-            response = genai.Client().models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    tools=[
-                        types.Tool(
-                            google_search=types.GoogleSearch()
-                        )
-                    ]
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        tools=[
+                            types.Tool(
+                                google_search=types.GoogleSearch()
+                            )
+                        ]
+                    )
                 )
-            )
+                return response.text
 
-            return response.text
+            except exceptions.ResourceExhausted:
+                if attempt == max_retries:
+                    print(f"{model_name} quota exhausted.")
+                    break
+                
+                # Exponential backoff with jitter
+                delay = (base_delay * (2 ** attempt)) + random.uniform(0, 2)
+                print(f"Rate limited on {model_name}. Retrying in {delay:.1f}s")
+                time.sleep(delay)
 
-        except exceptions.ResourceExhausted:
-
-            if attempt == max_retries:
-                print(f"{model_name} quota exhausted")
+            except Exception as e:
+                print(f"Error on {model_name}: {str(e)}")
+                # Break to fallback to the next model if a non-rate-limit error occurs
                 break
 
-            delay = (base_delay * (2 ** attempt)) + random.uniform(0, 2)
-
-            print(
-                f"Rate limited on {model_name}. "
-                f"Retrying in {delay:.1f}s"
-            )
-
-            time.sleep(delay)
-
-        except Exception as e:
-            print(f"Error on {model_name}: {str(e)}")
-            break
-
-raise HTTPException(
-    status_code=429,
-    detail="All Gemini models are currently unavailable."
-)
+    raise HTTPException(
+        status_code=429,
+        detail="All Gemini models are currently unavailable."
+    )
+    
 
 
 # --- CHANNEL 1: 3D DEBATE ARENA ROUTE ---
