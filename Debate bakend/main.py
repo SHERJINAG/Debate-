@@ -167,20 +167,16 @@ from fastapi import HTTPException
 import json
 import time
 
-# Initialize client
 client = genai.Client()
 
 def generate_news_with_fallback(prompt: str):
-    """
-    Cycles through specific models if one fails or hits rate limits.
-    """
-    # Define your ordered list of models
-    models_to_try = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash']
+    # Use models you have confirmed are available in your region
+    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
     
-    # Configure the search tool and strict JSON output
+    # Configure the request to force JSON output
     config = types.GenerateContentConfig(
         tools=[types.Tool(google_search=types.GoogleSearch())],
-        response_mime_type="application/json",
+        response_mime_type="application/json", # <--- CRITICAL: Forces valid JSON
         temperature=0.7
     )
 
@@ -192,28 +188,26 @@ def generate_news_with_fallback(prompt: str):
                 contents=prompt,
                 config=config
             )
-            return response.text
             
+            # Ensure response.text exists and is not empty
+            if response.text and response.text.strip():
+                return response.text
+            else:
+                print(f"Empty response from {model_name}")
+                continue
+                
         except Exception as e:
             print(f"Failed on {model_name}: {str(e)}")
-            # Small delay before trying the next model
-            time.sleep(1) 
+            time.sleep(1) # Brief pause before fallback
             continue
 
-    # If all models fail
-    raise HTTPException(
-        status_code=503, 
-        detail="All configured Gemini models are currently unavailable."
-    )
+    raise HTTPException(status_code=503, detail="All models failed to generate valid news.")
 
 @app.post("/api/studio/process-news")
 async def process_news_channel(request: NewsRequest):
     prompt = f"""
-    You are an elite TV News Producer. Search for the latest news for: "{request.category}"
-    and generate a broadcast script in formal Tamil (தமிழ்).
-    
-    CRITICAL: Output ONLY a raw JSON array of 10 objects. 
-    Each object must have: "segment_index", "camera_angle", "title", "dialogue".
+    Generate exactly 10 news items for category: "{request.category}" in Tamil.
+    Output MUST be a JSON array of objects with keys: "segment_index", "camera_angle", "title", "dialogue".
     """
     
     try:
@@ -224,7 +218,12 @@ async def process_news_channel(request: NewsRequest):
             "broadcast_timeline": json.loads(raw_json_string)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"News Processing Error: {str(e)}")
+        # Log the actual error for debugging
+        print(f"News Route Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process news stream.")
+        
+
+
         
         
 # --- SPORTS API ENDPOINTS ---
