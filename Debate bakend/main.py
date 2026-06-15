@@ -38,54 +38,74 @@ class NewsRequest(BaseModel):
     category: str  # "tamil-nadu" | "india" | "global" | "sports" | "tech"
 
 # --- REUSABLE GENERATION HELPER WITH MODEL FALLBACK ---
-import time
+from google import genai
+from google.genai import types
+from google.api_core import exceptions
+from fastapi import HTTPException
 import random
+import time
 
-def generate_debate_with_fallback(prompt: str):
-    """
-    Attempts generation across free tier models with automated exponential backoff 
-    to absorb 429 Rate Limit (Quota Exceeded) spikes gracefully.
-    """
-    # Optimized list of valid active stable free-tier endpoints
-    models_to_try = [ 'gemini-3.1-flash-lite','gemini-3.5-flash', 'gemini-2.5-flash']
-    
-    max_retries = 3
-    base_delay = 5  # Initial structural pause window in seconds
-    
-    for model_name in models_to_try:
-        retries = 0
-        while retries <= max_retries:
-            try:
-                print(f"Attempting script generation via: {model_name} (Attempt {retries + 1})...")
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(
-                    prompt,
-                    generation_config={"response_mime_type": "application/json"}
+def generate_with_web_search(prompt: str):
+"""
+Generate Tamil news/debate content using Google Search grounding
+with automatic fallback and exponential backoff.
+"""
+
+models = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-1.5-flash"
+]
+
+max_retries = 3
+base_delay = 5
+
+for model_name in models:
+
+    for attempt in range(max_retries + 1):
+
+        try:
+            print(f"Using {model_name} | Attempt {attempt+1}")
+
+            response = genai.Client().models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    tools=[
+                        types.Tool(
+                            google_search=types.GoogleSearch()
+                        )
+                    ]
                 )
-                return response.text
-                
-            except exceptions.ResourceExhausted as e:
-                # Catch 429 Quota/Rate limits cleanly
-                retries += 1
-                if retries > max_retries:
-                    print(f"Rate limit hard-cap reached for {model_name}. Cascading down to next backup model...")
-                    break  # Break out of the retry loop, fall through to the next model in the outer loop
-                
-                # Calculate exponential backoff delay with a random jitter element to prevent stampeding
-                delay = (base_delay * (2 ** retries)) + random.uniform(0, 2)
-                print(f"⚠️ 429 Quota Exceeded on {model_name}. Retrying in {delay:.2f} seconds...")
-                time.sleep(delay)
-                
-            except Exception as e:
-                # If it's a structural syntax error or structural failure, raise it immediately
-                print(f"Unhandled operational crash encountered: {str(e)}")
-                raise e
-                
-    # If the thread runs completely out of both models and retries
-    raise HTTPException(
-        status_code=429,
-        detail="All free-tier model clusters are currently rate-limited. Please wait 45 seconds and refresh the dashboard."
-    )
+            )
+
+            return response.text
+
+        except exceptions.ResourceExhausted:
+
+            if attempt == max_retries:
+                print(f"{model_name} quota exhausted")
+                break
+
+            delay = (base_delay * (2 ** attempt)) + random.uniform(0, 2)
+
+            print(
+                f"Rate limited on {model_name}. "
+                f"Retrying in {delay:.1f}s"
+            )
+
+            time.sleep(delay)
+
+        except Exception as e:
+            print(f"Error on {model_name}: {str(e)}")
+            break
+
+raise HTTPException(
+    status_code=429,
+    detail="All Gemini models are currently unavailable."
+)
+
 
 # --- CHANNEL 1: 3D DEBATE ARENA ROUTE ---
 @app.post("/api/studio/process-debate")
