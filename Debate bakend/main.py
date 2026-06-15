@@ -163,56 +163,69 @@ async def process_debate_session(request: DebateRequest):
 #News
 from google import genai
 from google.genai import types
+from fastapi import HTTPException
 import json
+import time
 
-# Initialize the client
+# Initialize client
 client = genai.Client()
+
+def generate_news_with_fallback(prompt: str):
+    """
+    Cycles through specific models if one fails or hits rate limits.
+    """
+    # Define your ordered list of models
+    models_to_try = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash']
+    
+    # Configure the search tool and strict JSON output
+    config = types.GenerateContentConfig(
+        tools=[types.Tool(google_search=types.GoogleSearch())],
+        response_mime_type="application/json",
+        temperature=0.7
+    )
+
+    for model_name in models_to_try:
+        try:
+            print(f"Attempting generation via: {model_name}...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=config
+            )
+            return response.text
+            
+        except Exception as e:
+            print(f"Failed on {model_name}: {str(e)}")
+            # Small delay before trying the next model
+            time.sleep(1) 
+            continue
+
+    # If all models fail
+    raise HTTPException(
+        status_code=503, 
+        detail="All configured Gemini models are currently unavailable."
+    )
 
 @app.post("/api/studio/process-news")
 async def process_news_channel(request: NewsRequest):
+    prompt = f"""
+    You are an elite TV News Producer. Search for the latest news for: "{request.category}"
+    and generate a broadcast script in formal Tamil (தமிழ்).
+    
+    CRITICAL: Output ONLY a raw JSON array of 10 objects. 
+    Each object must have: "segment_index", "camera_angle", "title", "dialogue".
+    """
+    
     try:
-        # Define the Google Search tool
-        google_search_tool = types.Tool(google_search=types.GoogleSearch())
-        
-        # Configure the request to use the search tool
-        config = types.GenerateContentConfig(
-            tools=[google_search_tool],
-            temperature=0.7 # A balanced temperature is recommended for news
-        )
-        
-        prompt = f"""
-        You are an elite AI TV News Producer. 
-        Generate a comprehensive, high-impact news broadcast script in formal 
-        broadcast Tamil (தமிழ்) for category: "{request.category}".
-        
-        CRITICAL RULES:
-        1. Search for the absolute latest news for "{request.category}" in Tamil.
-        2. You MUST generate EXACTLY 10 sequential news items.
-        3. Match the sequence structure perfectly.
-
-        STRICT SCRIPT STRUCTURAL SEQUENCE:
-        - Index 0: Headline Overview (Camera: "HEADLINE_ZOOM")
-        - Index 1 to 8: Alternating deep reporting segments and statistical breakdowns (Camera: Alternate between "ANCHOR_DESK" and "GRAPHIC_PAN")
-        - Index 9: Comprehensive channel sign-off wrap up (Camera: "STUDIO_WIDE")
-
-        Output MUST be a raw valid JSON array. Do not include markdown code block wraps or backticks.
-        """
-        
-        # Call the model with the tool configuration
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", # Use a model that supports grounding
-            contents=prompt,
-            config=config
-        )
-        
+        raw_json_string = generate_news_with_fallback(prompt)
         return {
             "success": True,
             "category": request.category,
-            "broadcast_timeline": json.loads(response.text)
+            "broadcast_timeline": json.loads(raw_json_string)
         }
     except Exception as e:
-        print(f"News Route Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"News Processing Error: {str(e)}")
+        
         
 # --- SPORTS API ENDPOINTS ---
 
