@@ -102,38 +102,113 @@ async def process_debate_session(request: DebateRequest):
         current_date_context = datetime.now().strftime("%B %Y")
         
         system_orchestration_prompt = f"""
-        You are the chief director for an elite, high-intensity live Tamil TV News Debate program (பாணியில் விவாத மேடை).
-        Generate a deeply engaging, aggressive, and fast-paced script written entirely in conversational, media-style spoken Tamil (தமிழ்).
-        
-        CURRENT REAL-WORLD TIMELINE: {current_date_context}. Ensure any time-sensitive references in arguments logically align with this real-world date.
+You are the Chief Editor, Debate Producer, and Program Director of a leading Tamil television debate show.
 
-        THE VISUALIZED DEBATE TOPIC: 
-        "{request.topic}"
-        
-        STRICT BEHAVIORAL & QUESTIONING RULES:
-        1. UNIVERSAL ADAPTABILITY: Identify the core friction point and build highly relevant, contrasting arguments around it.
-        2. HIGH ATTACK & AGGRESSION: The Attacker (Speaker 5) must fire sharp, direct, biting consecutive questions to the Supporter (Speaker 2).
-        3. NATURAL TAMIL INTERRUPTIONS: Speakers must aggressively cut each other off or start their turns with combative dialogue markers (e.g., "இருங்க இருங்க!", "கேள்விக்கு பதில் சொல்லுங்க!").
-        4. TEXT LENGTH SPECIFICATION: Each speaker's response must be a solid, descriptive monologue (aim for roughly 100-180 words per turn).
-        5. LANGUAGE TONE: Use colloquial media-style Tamil as heard on leading 24/7 news channels.
-        
-        STRICT POSITION MATRIX (Exactly 7 entries in chronological order):
-        1. Speaker 3 (Anchor): Dramatic, theatrical intro framing the core conflict.
-        2. Speaker 2 (Supported Guest): Defends the core premise of the topic passionately.
-        3. Speaker 5 (Opposite Guest/Attacker): Rebuts fiercely with critical tracking queries.
-        4. Speaker 4 (Neutral Expert): Breaks down ground realities and logistical parameters calmly.
-        5. Speaker 1 (Public Voice Pro): Grassroots community perspective supporting the view.
-        6. Speaker 6 (Public Voice Anti): Localized skepticism calling out structural problems.
-        7. Speaker 3 (Anchor): Restores structural order, cuts off cross-talk, and closes the panel.
+TODAY'S DATE:
+{current_date_context}
 
-        Output MUST be a valid JSON array without any markdown syntax wraps, comments, or backticks.
+DEBATE TOPIC:
+"{request.topic}"
+
+IMPORTANT INSTRUCTIONS:
+
+* Search Google for the latest real-world developments related to this topic.
+* Use current events, recent announcements, policy decisions, statistics, controversies, public reactions, and verified developments.
+* Prefer information from today and recent days.
+* Do NOT invent facts, data, people, statements, or events.
+* All arguments must be grounded in real-world developments.
+* Write entirely in spoken Tamil as heard on leading Tamil news channels.
+* The debate should feel live, intense, emotional, and highly engaging.
+
+DEBATE STYLE RULES:
+
+1. HIGH-ENERGY TELEVISION FORMAT
+
+   * Fast-paced newsroom atmosphere.
+   * Frequent interruptions.
+   * Strong disagreements.
+   * Direct challenges between speakers.
+
+2. AGGRESSIVE QUESTIONING
+
+   * Speaker 5 must repeatedly challenge Speaker 2.
+   * Questions should be sharp, fact-driven, and confrontational.
+
+3. NATURAL TAMIL SPEECH
+
+   * Use expressions such as:
+     "இருங்க!"
+     "ஒரு நிமிஷம்!"
+     "கேள்விக்கு பதில் சொல்லுங்க!"
+     "அதுதான் நான் கேட்கிறேன்!"
+     "மக்கள் இதைத்தான் கேட்கிறார்கள்!"
+
+4. RESPONSE LENGTH
+
+   * Every speaker must deliver detailed responses.
+   * Target approximately 100-180 words per turn.
+
+5. REALISM
+
+   * The discussion should sound exactly like a Tamil television prime-time debate.
+
+SPEAKER ORDER (EXACTLY 7 ENTRIES):
+
+1. Speaker 3 (Main Anchor)
+
+   * Dramatic introduction.
+   * Present the controversy.
+   * Introduce both sides.
+
+2. Speaker 2 (Supporting Guest)
+
+   * Strongly supports the topic.
+
+3. Speaker 5 (Opposing Guest)
+
+   * Aggressively attacks the supporting argument.
+
+4. Speaker 4 (Neutral Expert)
+
+   * Provides facts, context, and analysis.
+
+5. Speaker 1 (Public Voice Pro)
+
+   * Represents citizens supporting the position.
+
+6. Speaker 6 (Public Voice Anti)
+
+   * Represents citizens opposing the position.
+
+7. Speaker 3 (Main Anchor)
+
+   * Controls the final arguments.
+   * Stops interruptions.
+   * Delivers closing remarks.
+
+RETURN ONLY VALID JSON.
+
+NO MARKDOWN.
+NO BACKTICKS.
+NO EXPLANATIONS.
+
+FORMAT:
+
+[
+{
+"speaker_id": 3,
+"role": "Main Anchor",
+"dialogue": "..."
+},
+{
+"speaker_id": 2,
+"role": "Supporting Guest",
+"dialogue": "..."
+}
+]
+"""
+
         
-        Format template:
-        [
-          {{"speaker_id": 3, "role": "Main Anchor", "dialogue": "..."}},
-          {{"speaker_id": 2, "role": "Supported Guest", "dialogue": "..."}}
-        ]
-        """
         
         raw_response_text = generate_debate_with_fallback(system_orchestration_prompt)
         raw_script_data = json.loads(raw_response_text)
@@ -175,49 +250,44 @@ async def process_news_channel(request: NewsRequest):
         current_date = datetime.now().strftime("%B %d, %Y")
 
         system_prompt = f"""
-You are a professional Tamil TV News Editor and Broadcast Producer.
+Search Google for the latest news and current developments related to:
 
-Current Date: {current_date}
-News Category: {request.category}
+Category: {request.category}
 
-TASK:
-Generate a realistic Tamil television news bulletin based on current real-world developments related to the requested category.
+Date: {current_date}
 
-STRICT REQUIREMENTS:
-1. Generate EXACTLY 10 news segments.
-2. Use formal broadcast Tamil (தமிழ் செய்தி வாசிப்பு நடை).
-3. Focus on real-world current affairs, recent events, official announcements, statistics, trends, and developments.
-4. Do not generate fictional, speculative, or imaginary news.
-5. Each segment must contain:
-   - segment_index
-   - camera_angle
-   - title
-   - dialogue
-6. dialogue should be detailed and suitable for a TV anchor.
-7. Return ONLY valid JSON.
-8. Do NOT return markdown, explanations, comments, or code blocks.
+IMPORTANT:
 
-SEGMENT STRUCTURE:
-0 → HEADLINE_ZOOM → Major headlines overview.
-1 → ANCHOR_DESK → Main news report.
-2 → GRAPHIC_PAN → Statistics / data breakdown.
-3 → ANCHOR_DESK → Important development.
-4 → GRAPHIC_PAN → Analysis / numbers.
-5 → ANCHOR_DESK → Major update.
-6 → GRAPHIC_PAN → Statistical insight.
-7 → ANCHOR_DESK → Additional key report.
-8 → GRAPHIC_PAN → Summary of trends and figures.
-9 → STUDIO_WIDE → Comprehensive sign-off and bulletin wrap-up.
+- Use Google Search results.
+- Use only recent real-world news.
+- Prefer news from today.
+- Do not create fictional stories.
+- Do not speculate.
+- Use verified developments, announcements, statistics and events.
+- Write entirely in formal Tamil television news style.
+- Generate EXACTLY 10 segments.
 
-OUTPUT FORMAT:
-[
-  {{
-    "segment_index": 0,
-    "camera_angle": "HEADLINE_ZOOM",
-    "title": "தலைப்புச் செய்திகள்",
-    "dialogue": "..."
-  }}
-]
+Each segment must contain:
+
+- segment_index
+- camera_angle
+- title
+- dialogue
+
+Return ONLY valid JSON.
+
+Required camera sequence:
+
+0 HEADLINE_ZOOM
+1 ANCHOR_DESK
+2 GRAPHIC_PAN
+3 ANCHOR_DESK
+4 GRAPHIC_PAN
+5 ANCHOR_DESK
+6 GRAPHIC_PAN
+7 ANCHOR_DESK
+8 GRAPHIC_PAN
+9 STUDIO_WIDE
 """
 
         raw_response = generate_debate_with_fallback(system_prompt)
