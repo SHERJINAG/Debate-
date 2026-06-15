@@ -171,7 +171,7 @@ client = genai.Client()
 
 def generate_news_with_fallback(prompt: str):
     # Use models you have confirmed are available in your region
-    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash']
+    models_to_try = [ 'gemini-3.1-flash-lite','gemini-3.5-flash', 'gemini-2.5-flash']
     
     # Configure the request to force JSON output
     config = types.GenerateContentConfig(
