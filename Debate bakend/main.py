@@ -160,45 +160,60 @@ async def process_debate_session(request: DebateRequest):
     except Exception as e:
         print(f"System Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+#News
+from google import genai
+from google.genai import types
+import json
 
-# --- CHANNEL 2: AUTOMATED AI TV NEWS CHANNEL ROUTE ---
+# Initialize the client
+client = genai.Client()
+
 @app.post("/api/studio/process-news")
 async def process_news_channel(request: NewsRequest):
     try:
-        current_date = datetime.now().strftime("%B %d, %Y")
+        # Define the Google Search tool
+        google_search_tool = types.Tool(google_search=types.GoogleSearch())
         
-        system_prompt = f"""
-        You are an elite AI TV News Producer. Current date: {current_date}.
-        Generate a comprehensive, high-impact news broadcast script in formal broadcast Tamil (தமிழ்) for category: "{request.category}".
+        # Configure the request to use the search tool
+        config = types.GenerateContentConfig(
+            tools=[google_search_tool],
+            temperature=0.7 # A balanced temperature is recommended for news
+        )
+        
+        prompt = f"""
+        You are an elite AI TV News Producer. 
+        Generate a comprehensive, high-impact news broadcast script in formal 
+        broadcast Tamil (தமிழ்) for category: "{request.category}".
         
         CRITICAL RULES:
-        1. You MUST generate EXACTLY 10 sequential news items.
-        2. Provide high-quality news content relevant to "{request.category}".
+        1. Search for the absolute latest news for "{request.category}" in Tamil.
+        2. You MUST generate EXACTLY 10 sequential news items.
         3. Match the sequence structure perfectly.
 
-        STRICT SCRIPT STRUCTURAL SEQUENCE (Generate exactly 10 distinct elements, indexes 0 to 9):
+        STRICT SCRIPT STRUCTURAL SEQUENCE:
         - Index 0: Headline Overview (Camera: "HEADLINE_ZOOM")
         - Index 1 to 8: Alternating deep reporting segments and statistical breakdowns (Camera: Alternate between "ANCHOR_DESK" and "GRAPHIC_PAN")
         - Index 9: Comprehensive channel sign-off wrap up (Camera: "STUDIO_WIDE")
 
         Output MUST be a raw valid JSON array. Do not include markdown code block wraps or backticks.
-        
-        Format Template:
-        [
-          {{"segment_index": 0, "camera_angle": "HEADLINE_ZOOM", "title": "தலைப்புச் செய்திகள்", "dialogue": "..."}},
-          {{"segment_index": 1, "camera_angle": "ANCHOR_DESK", "title": "தமிழக முக்கிய நிகழ்வுகள்", "dialogue": "..."}}
-        ]
         """
-        raw_response = generate_debate_with_fallback(system_prompt)
+        
+        # Call the model with the tool configuration
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", # Use a model that supports grounding
+            contents=prompt,
+            config=config
+        )
+        
         return {
             "success": True,
             "category": request.category,
-            "broadcast_timeline": json.loads(raw_response)
+            "broadcast_timeline": json.loads(response.text)
         }
     except Exception as e:
         print(f"News Route Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
+        
 # --- SPORTS API ENDPOINTS ---
 
 @app.get("/api/sports/football")
