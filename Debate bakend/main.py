@@ -51,6 +51,21 @@ from google import genai
 from google.genai import types
 from fastapi import HTTPException
 
+import feedparser
+
+def get_tamil_news_headlines(category: str):
+    rss_url = (
+        f"https://news.google.com/rss/search?"
+        f"q={category}&hl=ta&gl=IN&ceid=IN:ta"
+    )
+
+    feed = feedparser.parse(rss_url)
+
+    return [
+        entry.title
+        for entry in feed.entries[:10]
+    ]
+
 
 def generate_debate_with_fallback(prompt: str):
 
@@ -68,17 +83,11 @@ def generate_debate_with_fallback(prompt: str):
 
             response = client.models.generate_content(
                 model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    tools=[
-                        types.Tool(
-                            google_search=types.GoogleSearch()
-                        )
-                    ]
-                )
+                contents=prompt
             )
 
-            return response.text
+            if response and response.text:
+                return response.text.strip()
 
         except Exception as e:
 
@@ -104,86 +113,103 @@ async def process_debate_session(request: DebateRequest):
         system_orchestration_prompt = f"""
 You are the Chief Editor, Debate Producer, and Program Director of a leading Tamil television debate show.
 
-TODAY'S DATE:
+CURRENT DATE:
 {current_date_context}
 
 DEBATE TOPIC:
 "{request.topic}"
 
-IMPORTANT INSTRUCTIONS:
+TASK:
 
-* Search Google for the latest real-world developments related to this topic.
-* Use current events, recent announcements, policy decisions, statistics, controversies, public reactions, and verified developments.
-* Prefer information from today and recent days.
-* Do NOT invent facts, data, people, statements, or events.
-* All arguments must be grounded in real-world developments.
-* Write entirely in spoken Tamil as heard on leading Tamil news channels.
-* The debate should feel live, intense, emotional, and highly engaging.
+Generate a highly engaging Tamil television prime-time debate script.
 
-DEBATE STYLE RULES:
+IMPORTANT RULES:
 
-1. HIGH-ENERGY TELEVISION FORMAT
+* Focus strictly on the given debate topic.
+* Use recent real-world context when relevant.
+* Do not invent statistics, official announcements, or factual claims.
+* Keep the debate realistic and suitable for a leading Tamil news channel.
+* Write entirely in natural spoken Tamil.
+* The discussion should feel live, emotional, intense, and fast-paced.
 
-   * Fast-paced newsroom atmosphere.
+DEBATE STYLE:
+
+1. HIGH-ENERGY NEWSROOM ATMOSPHERE
+
+   * Fast-paced exchanges.
    * Frequent interruptions.
    * Strong disagreements.
-   * Direct challenges between speakers.
+   * Direct challenges between participants.
 
 2. AGGRESSIVE QUESTIONING
 
    * Speaker 5 must repeatedly challenge Speaker 2.
-   * Questions should be sharp, fact-driven, and confrontational.
+   * Questions should be sharp and confrontational.
+   * Demand direct answers.
 
-3. NATURAL TAMIL SPEECH
+3. NATURAL TAMIL NEWS DEBATE LANGUAGE
 
-   * Use expressions such as:
-     "இருங்க!"
-     "ஒரு நிமிஷம்!"
-     "கேள்விக்கு பதில் சொல்லுங்க!"
-     "அதுதான் நான் கேட்கிறேன்!"
-     "மக்கள் இதைத்தான் கேட்கிறார்கள்!"
+   Use expressions such as:
+
+   * "இருங்க!"
+   * "ஒரு நிமிஷம்!"
+   * "கேள்விக்கு பதில் சொல்லுங்க!"
+   * "அதுதான் நான் கேட்கிறேன்!"
+   * "மக்கள் இதைத்தான் கேட்கிறார்கள்!"
+   * "நடுவில் பேசாதீங்க!"
+   * "ஒரு விஷயத்தை தெளிவாக சொல்லுங்க!"
 
 4. RESPONSE LENGTH
 
-   * Every speaker must deliver detailed responses.
-   * Target approximately 100-180 words per turn.
+   * Each speaker should provide detailed responses.
+   * Approximately 100–180 words per turn.
 
 5. REALISM
 
-   * The discussion should sound exactly like a Tamil television prime-time debate.
+   * Sound exactly like a Tamil television prime-time debate.
+   * Create natural tension between speakers.
+   * Allow interruptions and counter-attacks.
 
-SPEAKER ORDER (EXACTLY 7 ENTRIES):
+SPEAKER ORDER (EXACTLY 7 ENTRIES)
 
-1. Speaker 3 (Main Anchor)
+1. Speaker 3
+   Role: Main Anchor
 
    * Dramatic introduction.
    * Present the controversy.
    * Introduce both sides.
 
-2. Speaker 2 (Supporting Guest)
+2. Speaker 2
+   Role: Supporting Guest
 
    * Strongly supports the topic.
 
-3. Speaker 5 (Opposing Guest)
+3. Speaker 5
+   Role: Opposing Guest
 
-   * Aggressively attacks the supporting argument.
+   * Aggressively attacks the supporting position.
 
-4. Speaker 4 (Neutral Expert)
+4. Speaker 4
+   Role: Neutral Expert
 
-   * Provides facts, context, and analysis.
+   * Provides facts, analysis, and context.
 
-5. Speaker 1 (Public Voice Pro)
+5. Speaker 1
+   Role: Public Voice Pro
 
-   * Represents citizens supporting the position.
+   * Represents citizens supporting the view.
 
-6. Speaker 6 (Public Voice Anti)
+6. Speaker 6
+   Role: Public Voice Anti
 
-   * Represents citizens opposing the position.
+   * Represents citizens opposing the view.
 
-7. Speaker 3 (Main Anchor)
+7. Speaker 3
+   Role: Main Anchor
 
-   * Controls the final arguments.
+   * Regains control of the debate.
    * Stops interruptions.
+   * Summarizes key arguments.
    * Delivers closing remarks.
 
 RETURN ONLY VALID JSON.
@@ -207,6 +233,7 @@ FORMAT:
 }
 ]
 """
+
 
         
         
@@ -249,58 +276,96 @@ async def process_news_channel(request: NewsRequest):
     try:
         current_date = datetime.now().strftime("%B %d, %Y")
 
+        tamil_news_headlines = get_tamil_news_headlines(
+            request.category
+        )
+
+        headlines_text = "\n".join(
+            [f"- {headline}" for headline in tamil_news_headlines]
+        )
+
         system_prompt = f"""
-Search Google for the latest news and current developments related to:
+You are a professional Tamil TV News Editor and Broadcast Producer.
 
-Category: {request.category}
+Current Date: {current_date}
 
-Date: {current_date}
+News Category:
+{request.category}
+
+LATEST TAMIL NEWS HEADLINES:
+
+{headlines_text}
+
+TASK:
+
+Generate a realistic Tamil television news bulletin based on the above latest Tamil news headlines.
+
+STRICT REQUIREMENTS:
+
+1. Generate EXACTLY 10 news segments.
+2. Use formal broadcast Tamil (தமிழ் செய்தி வாசிப்பு நடை).
+3. Use only the supplied news headlines and related developments.
+4. Do not generate fictional, speculative, or imaginary news.
+5. Expand headlines into detailed television news reports.
+6. Each segment must contain:
+   - segment_index
+   - camera_angle
+   - title
+   - dialogue
+7. dialogue should be detailed and suitable for a TV anchor.
+8. Return ONLY valid JSON.
+9. Do NOT return markdown, explanations, comments, or code blocks.
+
+SEGMENT STRUCTURE:
+
+0 → HEADLINE_ZOOM → Major headlines overview.
+1 → ANCHOR_DESK → Main news report.
+2 → GRAPHIC_PAN → Statistics / data breakdown.
+3 → ANCHOR_DESK → Important development.
+4 → GRAPHIC_PAN → Analysis / numbers.
+5 → ANCHOR_DESK → Major update.
+6 → GRAPHIC_PAN → Statistical insight.
+7 → ANCHOR_DESK → Additional key report.
+8 → GRAPHIC_PAN → Summary of trends and figures.
+9 → STUDIO_WIDE → Comprehensive sign-off and bulletin wrap-up.
+
+OUTPUT FORMAT:
+
+[
+  {{
+    "segment_index": 0,
+    "camera_angle": "HEADLINE_ZOOM",
+    "title": "தலைப்புச் செய்திகள்",
+    "dialogue": "..."
+  }}
+]
 
 IMPORTANT:
-
-- Use Google Search results.
-- Use only recent real-world news.
-- Prefer news from today.
-- Do not create fictional stories.
-- Do not speculate.
-- Use verified developments, announcements, statistics and events.
-- Write entirely in formal Tamil television news style.
-- Generate EXACTLY 10 segments.
-
-Each segment must contain:
-
-- segment_index
-- camera_angle
-- title
-- dialogue
-
-Return ONLY valid JSON.
-
-Required camera sequence:
-
-0 HEADLINE_ZOOM
-1 ANCHOR_DESK
-2 GRAPHIC_PAN
-3 ANCHOR_DESK
-4 GRAPHIC_PAN
-5 ANCHOR_DESK
-6 GRAPHIC_PAN
-7 ANCHOR_DESK
-8 GRAPHIC_PAN
-9 STUDIO_WIDE
+- Response must start with '['
+- Response must end with ']'
+- Return JSON array only
 """
 
-        raw_response = generate_debate_with_fallback(system_prompt)
+        raw_response = generate_debate_with_fallback(
+            system_prompt
+        )
+
+        broadcast_timeline = json.loads(
+            raw_response.strip()
+        )
 
         return {
             "success": True,
             "category": request.category,
-            "broadcast_timeline": json.loads(raw_response)
+            "broadcast_timeline": broadcast_timeline
         }
 
     except Exception as e:
         print(f"News Route Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+)
 
         
         
