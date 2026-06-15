@@ -4,7 +4,6 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import google.generativeai as genai
 from google.api_core import exceptions
 from sports import (
     get_football_wc_list,
