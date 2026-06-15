@@ -161,68 +161,68 @@ async def process_debate_session(request: DebateRequest):
         print(f"System Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 #News
-from google import genai
-from google.genai import types
-from fastapi import HTTPException
-import json
-import time
-
-client = genai.Client()
-
-def generate_news_with_fallback(prompt: str):
-    # Use models you have confirmed are available in your region
-    models_to_try = [ 'gemini-3.1-flash-lite','gemini-3.5-flash', 'gemini-2.5-flash']
-    
-    # Configure the request to force JSON output
-    config = types.GenerateContentConfig(
-        tools=[types.Tool(google_search=types.GoogleSearch())],
-        response_mime_type="application/json", # <--- CRITICAL: Forces valid JSON
-        temperature=0.7
-    )
-
-    for model_name in models_to_try:
-        try:
-            print(f"Attempting generation via: {model_name}...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=config
-            )
-            
-            # Ensure response.text exists and is not empty
-            if response.text and response.text.strip():
-                return response.text
-            else:
-                print(f"Empty response from {model_name}")
-                continue
-                
-        except Exception as e:
-            print(f"Failed on {model_name}: {str(e)}")
-            time.sleep(1) # Brief pause before fallback
-            continue
-
-    raise HTTPException(status_code=503, detail="All models failed to generate valid news.")
-
 @app.post("/api/studio/process-news")
 async def process_news_channel(request: NewsRequest):
-    prompt = f"""
-    Generate exactly 10 news items for category: "{request.category}" in Tamil.
-    Output MUST be a JSON array of objects with keys: "segment_index", "camera_angle", "title", "dialogue".
-    """
-    
     try:
-        raw_json_string = generate_news_with_fallback(prompt)
+        current_date = datetime.now().strftime("%B %d, %Y")
+
+        system_prompt = f"""
+You are a professional Tamil TV News Editor and Broadcast Producer.
+
+Current Date: {current_date}
+News Category: {request.category}
+
+TASK:
+Generate a realistic Tamil television news bulletin based on current real-world developments related to the requested category.
+
+STRICT REQUIREMENTS:
+1. Generate EXACTLY 10 news segments.
+2. Use formal broadcast Tamil (தமிழ் செய்தி வாசிப்பு நடை).
+3. Focus on real-world current affairs, recent events, official announcements, statistics, trends, and developments.
+4. Do not generate fictional, speculative, or imaginary news.
+5. Each segment must contain:
+   - segment_index
+   - camera_angle
+   - title
+   - dialogue
+6. dialogue should be detailed and suitable for a TV anchor.
+7. Return ONLY valid JSON.
+8. Do NOT return markdown, explanations, comments, or code blocks.
+
+SEGMENT STRUCTURE:
+0 → HEADLINE_ZOOM → Major headlines overview.
+1 → ANCHOR_DESK → Main news report.
+2 → GRAPHIC_PAN → Statistics / data breakdown.
+3 → ANCHOR_DESK → Important development.
+4 → GRAPHIC_PAN → Analysis / numbers.
+5 → ANCHOR_DESK → Major update.
+6 → GRAPHIC_PAN → Statistical insight.
+7 → ANCHOR_DESK → Additional key report.
+8 → GRAPHIC_PAN → Summary of trends and figures.
+9 → STUDIO_WIDE → Comprehensive sign-off and bulletin wrap-up.
+
+OUTPUT FORMAT:
+[
+  {{
+    "segment_index": 0,
+    "camera_angle": "HEADLINE_ZOOM",
+    "title": "தலைப்புச் செய்திகள்",
+    "dialogue": "..."
+  }}
+]
+"""
+
+        raw_response = generate_debate_with_fallback(system_prompt)
+
         return {
             "success": True,
             "category": request.category,
-            "broadcast_timeline": json.loads(raw_json_string)
+            "broadcast_timeline": json.loads(raw_response)
         }
-    except Exception as e:
-        # Log the actual error for debugging
-        print(f"News Route Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to process news stream.")
-        
 
+    except Exception as e:
+        print(f"News Route Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
         
         
