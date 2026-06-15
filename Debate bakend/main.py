@@ -4,6 +4,7 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from google import genai
 from google.api_core import exceptions
 from sports import (
     get_football_wc_list,
@@ -27,9 +28,11 @@ app.add_middleware(
 )
 
 # Configure Gemini API Key explicitly forcing the REST protocol transport layers
-GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_KEY")
-genai.configure(api_key=GOOGLE_API_KEY, transport="rest") # <-- CRUCIAL: Fixes SSL/Decryption crashes
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 
+client = genai.Client(
+    api_key=GOOGLE_API_KEY
+)
 class DebateRequest(BaseModel):
     topic: str
 
@@ -37,13 +40,13 @@ class NewsRequest(BaseModel):
     category: str  # "tamil-nadu" | "india" | "global" | "sports" | "tech"
 
 # --- REUSABLE GENERATION HELPER WITH MODEL FALLBACK ---
-from google import genai
+
 from google.genai import types
 from google.api_core import exceptions
 from fastapi import HTTPException
 import random
 import time
-client = genai.Client()
+
 def generate_debate_with_fallback(prompt: str):
     """
     Generate Tamil news/debate content using Google Search grounding
