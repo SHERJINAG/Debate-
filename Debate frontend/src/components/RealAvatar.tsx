@@ -182,77 +182,234 @@ function StudioBackgroundSet() {
     if (typeof window === "undefined") return null;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 512;
+    canvas.width = 2048;
+    canvas.height = 1024;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // 🎯 FIXED SEED (always same output)
-    const rand = seededRandom(42);
+    // ==========================
+    // BACKGROUND
+    // ==========================
+    const bg = ctx.createLinearGradient(0, 0, 0, 1024);
+    bg.addColorStop(0, "#020617");
+    bg.addColorStop(0.5, "#08142c");
+    bg.addColorStop(1, "#020617");
 
-    // 🎬 base gradient
-    const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-    grad.addColorStop(0, "#050816");
-    grad.addColorStop(0.5, "#0b1220");
-    grad.addColorStop(1, "#020617");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 2048, 1024);
 
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1024, 512);
-
-    // 📺 scan lines (stable)
-    for (let y = 0; y < 512; y += 6) {
-      ctx.fillStyle = "rgba(255,255,255,0.03)";
-      ctx.fillRect(0, y, 1024, 1);
+    // Scan lines
+    for (let y = 0; y < 1024; y += 6) {
+      ctx.fillStyle = "rgba(255,255,255,0.02)";
+      ctx.fillRect(0, y, 2048, 1);
     }
 
-    // 🟦 left panel (emerald)
-    ctx.fillStyle = "rgba(16, 185, 129, 0.10)";
-    ctx.fillRect(80, 120, 280, 260);
+    // ==========================
+    // LEFT STOCK SCREEN
+    // ==========================
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(40, 180, 450, 620);
 
-    // 🔵 right panel (blue)
-    ctx.fillStyle = "rgba(59, 130, 246, 0.10)";
-    ctx.fillRect(664, 120, 280, 260);
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.lineWidth = 1;
 
-    // ⚪ center panel
-    ctx.fillStyle = "rgba(255,255,255,0.03)";
-    ctx.fillRect(420, 140, 184, 220);
-
-    // ✨ seeded glow dots (NO RANDOM CHAOS)
-    for (let i = 0; i < 80; i++) {
-      const x = rand() * 1024;
-      const y = rand() * 512;
-
-      ctx.fillStyle = "rgba(255,255,255,0.05)";
+    for (let x = 40; x < 490; x += 40) {
       ctx.beginPath();
-      ctx.arc(x, y, rand() * 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(x, 180);
+      ctx.lineTo(x, 800);
+      ctx.stroke();
     }
 
-    return new THREE.CanvasTexture(canvas);
+    for (let y = 180; y < 800; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(40, y);
+      ctx.lineTo(490, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "#00ff88";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+
+    const pts = [
+      [80, 720],
+      [120, 680],
+      [180, 650],
+      [240, 600],
+      [300, 610],
+      [360, 520],
+      [420, 420],
+      [470, 320]
+    ];
+
+    pts.forEach(([x, y], i) => {
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+
+    ctx.fillStyle = "#00ff88";
+    ctx.font = "bold 40px Arial";
+    ctx.fillText("MARKET LIVE", 80, 140);
+
+    // ==========================
+    // CENTER MEDIA TV
+    // ==========================
+    const centerX = 1024;
+
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.arc(centerX, 500, 280, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(centerX, 500, 380, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // MEDIA PANEL
+    ctx.fillStyle = "#003da8";
+
+    roundRect(ctx, 670, 240, 700, 180, 20);
+    ctx.fill();
+
+    // RED SWOOSH
+    ctx.strokeStyle = "#ff2020";
+    ctx.lineWidth = 10;
+
+    ctx.beginPath();
+    ctx.moveTo(760, 340);
+    ctx.quadraticCurveTo(1020, 220, 1260, 310);
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.font = "bold 120px Arial";
+    ctx.fillText("MEDIA", centerX, 360);
+
+    // TV PANEL
+    ctx.fillStyle = "#d70000";
+
+    roundRect(ctx, 700, 450, 650, 190, 20);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 150px Arial";
+    ctx.fillText("TV", centerX - 30, 590);
+
+    // PLAY ICON
+    ctx.beginPath();
+    ctx.moveTo(1220, 500);
+    ctx.lineTo(1290, 545);
+    ctx.lineTo(1220, 590);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "bold 34px Arial";
+    ctx.fillText(
+      "AI NEWS. REAL IMPACT.",
+      centerX,
+      720
+    );
+
+    // ==========================
+    // RIGHT ANALYTICS SCREEN
+    // ==========================
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(1560, 180, 450, 620);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 40px Arial";
+    ctx.fillText("SURVEY DATA", 1630, 140);
+
+    const cx = 1720;
+    const cy = 470;
+    const r = 140;
+
+    const values = [40, 25, 20, 15];
+    const colors = [
+      "#2563eb",
+      "#dc2626",
+      "#16a34a",
+      "#facc15"
+    ];
+
+    let start = 0;
+
+    values.forEach((value, i) => {
+      const end =
+        start + (Math.PI * 2 * value) / 100;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, end);
+      ctx.closePath();
+
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+
+      start = end;
+    });
+
+    // BAR CHART
+    const bars = [140, 220, 180, 260];
+
+    bars.forEach((h, i) => {
+      ctx.fillStyle = "#38bdf8";
+
+      ctx.fillRect(
+        1840 + i * 35,
+        760 - h,
+        25,
+        h
+      );
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    return texture;
   }, []);
 
   return (
     <group position={[0, 2.5, -6.5]}>
-      {/* Screen */}
       <mesh>
         <planeGeometry args={[10.5, 4.5]} />
         <meshStandardMaterial
           map={screenTexture}
           roughness={0.25}
           metalness={0.1}
-          emissive="#0b1220"
-          emissiveIntensity={0.25}
+          emissive="#ffffff"
+          emissiveIntensity={0.35}
         />
       </mesh>
 
-      {/* Frame */}
       <mesh position={[0, 0, -0.05]}>
-        <boxGeometry args={[10.65, 4.65, 0.04]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        <boxGeometry args={[10.65, 4.65, 0.05]} />
+        <meshStandardMaterial
+          color="#0f172a"
+          roughness={0.4}
+        />
       </mesh>
     </group>
   );
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 function HighGlossStageFloor() {
