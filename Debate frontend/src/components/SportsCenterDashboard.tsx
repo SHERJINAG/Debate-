@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Line } from "@react-three/drei";
 import { 
   PerspectiveCamera, 
   MeshReflectorMaterial, 
@@ -693,14 +694,16 @@ const starSportsTexture = useMemo(
     {/* ========================================= */}
 {/* STAR SPORTS CURVED DISCUSSION DESK */}
 {/* ========================================= */}
-
 <group position={[0, 0, 2]}>
 
   {/* =======================
-      SINGLE CURVED DESK BODY
+      CURVED DESK BODY
   ======================= */}
 
-  <mesh position={[0, 0.42, 4.3]} rotation={[-Math.PI / 2, 0, 0]}>
+  <mesh
+    position={[0, 0.02, 4.3]}
+    rotation={[-Math.PI / 2, 0, 0]}
+  >
     <extrudeGeometry
       args={[
         (() => {
@@ -725,7 +728,7 @@ const starSportsTexture = useMemo(
           return shape;
         })(),
         {
-          depth: 0.85,
+          depth: 1.19,
           bevelEnabled: false,
         },
       ]}
@@ -739,7 +742,7 @@ const starSportsTexture = useMemo(
   </mesh>
 
   {/* =======================
-      CONTINUOUS GLASS TOP
+      GLASS TOP
   ======================= */}
 
   <mesh position={[0, 0.92, 4.3]}>
@@ -760,28 +763,56 @@ const starSportsTexture = useMemo(
   </mesh>
 
   {/* =======================
-      LED STRIP (TOP EDGE - FIXED)
+      TOP LED STRIP
   ======================= */}
 
-  <mesh position={[0, 0.78, 4.3]}>
-    <cylinderGeometry
-      args={[5.52, 5.52, 0.03, 256, 1, true, -0.6, 1.2]}
-    />
-
-    <meshBasicMaterial color="#00f0ff" />
-  </mesh>
+ <group position={[0, 0.95, -0.21]}>
+  <Line
+    points={[
+      [-3.0, 0, 0],
+      [3.0, 0, 0],
+    ]}
+    color="#00f0ff"
+    lineWidth={4}
+  />
+</group>
 
   {/* =======================
-      LED STRIP (BOTTOM EDGE - FIXED)
+      LOWER LED STRIP
   ======================= */}
 
-  <mesh position={[0, 0.62, 4.3]}>
-    <cylinderGeometry
-      args={[5.52, 5.52, 0.03, 256, 1, true, -0.6, 1.2]}
-    />
+  <group position={[0, 0.58, -0.21]}>
+  <Line
+    points={[
+      [-3.0, 0, 0],
+      [3.0, 0, 0],
+    ]}
+    color="#00f0ff"
+    lineWidth={4}
+  />
+</group>
 
-    <meshBasicMaterial color="#00f0ff" />
-  </mesh>
+
+  <group position={[0, 0.28, -0.21]}>
+  <Line
+    points={[
+      [-3.0, 0, 0],
+      [3.0, 0, 0],
+    ]}
+    color="#00f0ff"
+    lineWidth={4}
+  />
+</group>
+  {/* =======================
+      LED GLOW
+  ======================= */}
+
+  <pointLight
+    position={[0, 0.8, 4.5]}
+    color="#00f0ff"
+    intensity={4}
+    distance={12}
+  />
 
   {/* =======================
       STAR SPORTS LOGO
@@ -793,21 +824,11 @@ const starSportsTexture = useMemo(
     <meshBasicMaterial
       map={starSportsTexture}
       transparent
+      toneMapped={false}
     />
   </mesh>
 
-  {/* =======================
-      REALISTIC DESK OBJECTS
-  ======================= */}
-
-  {/* TABLE MIC */}
-  
-
-  {/* TABLET */}
-  
-
 </group>
-
 {/* ========================================= */}
 {/* FLOOR PLATFORM */}
 {/* ========================================= */}
