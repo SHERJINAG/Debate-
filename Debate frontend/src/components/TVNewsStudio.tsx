@@ -266,52 +266,118 @@ function PresentationSet({
   <mesh position={[0, 0, 0.09]}>
     <planeGeometry args={[7.2, 2.9]} />
     <meshStandardMaterial
-      color="#021224"
-      emissive="#2563eb"
-      emissiveIntensity={0.4}
+      color="#04152d"
+      emissive="#1e3a8a"
+      emissiveIntensity={0.8}
     />
   </mesh>
 
-  {/* Rotating Globe */}
-  <mesh
-    ref={worldMapRef}
-    position={[0, 0, 0.2]}
-  >
-    <sphereGeometry args={[0.9, 48, 48]} />
-    <meshStandardMaterial
-      color="#38bdf8"
-      wireframe
-      transparent
-      opacity={0.35}
-    />
+  {/* Top News Line */}
+  <mesh position={[0, 1.1, 0.12]}>
+    <boxGeometry args={[5.8, 0.03, 0.01]} />
+    <meshBasicMaterial color="#38bdf8" />
   </mesh>
 
-  {/* Outer Glow Globe */}
-  <mesh
-    position={[0, 0, 0.19]}
-    scale={[1.02, 1.02, 1.02]}
-  >
-    <sphereGeometry args={[0.9, 48, 48]} />
+  {/* Bottom News Line */}
+  <mesh position={[0, -1.1, 0.12]}>
+    <boxGeometry args={[5.8, 0.03, 0.01]} />
+    <meshBasicMaterial color="#38bdf8" />
+  </mesh>
+
+  {/* Outer Ring */}
+  <mesh position={[0, 0.05, 0.13]}>
+    <ringGeometry args={[1.0, 1.08, 64]} />
     <meshBasicMaterial
       color="#60a5fa"
-      wireframe
+      transparent
+      opacity={0.5}
+      side={THREE.DoubleSide}
     />
   </mesh>
 
-  {/* Decorative Horizontal Lines */}
-  <mesh position={[0, 0.8, 0.12]}>
-    <boxGeometry args={[4.8, 0.02, 0.01]} />
+  {/* Inner Ring */}
+  <mesh position={[0, 0.05, 0.14]}>
+    <ringGeometry args={[0.75, 0.8, 64]} />
+    <meshBasicMaterial
+      color="#38bdf8"
+      transparent
+      opacity={0.3}
+      side={THREE.DoubleSide}
+    />
+  </mesh>
+
+  {/* MEDIA Banner */}
+  <mesh position={[0, 0.45, 0.15]}>
+    <boxGeometry args={[4.2, 0.75, 0.03]} />
+    <meshBasicMaterial color="#0047AB" />
+  </mesh>
+
+  <Text
+    position={[0, 0.45, 0.18]}
+    fontSize={0.42}
+    color="white"
+    anchorX="center"
+    anchorY="middle"
+  >
+    MEDIA
+  </Text>
+
+  {/* Red TV Banner */}
+  <mesh position={[0, -0.25, 0.15]}>
+    <boxGeometry args={[3.4, 0.85, 0.03]} />
+    <meshBasicMaterial color="#D40000" />
+  </mesh>
+
+  <Text
+    position={[-0.2, -0.25, 0.18]}
+    fontSize={0.6}
+    color="white"
+    anchorX="center"
+    anchorY="middle"
+  >
+    TV
+  </Text>
+
+  {/* Play Icon */}
+  <mesh
+    position={[1.15, -0.25, 0.18]}
+    rotation={[0, 0, -Math.PI / 2]}
+  >
+    <coneGeometry args={[0.16, 0.32, 3]} />
+    <meshBasicMaterial color="white" />
+  </mesh>
+
+  {/* Tagline */}
+  <Text
+    position={[0, -0.85, 0.18]}
+    fontSize={0.12}
+    color="#93c5fd"
+    anchorX="center"
+    anchorY="middle"
+  >
+    AI NEWS • REAL IMPACT
+  </Text>
+
+  {/* Small Accent Lines */}
+  <mesh position={[-2.2, 0.85, 0.15]}>
+    <boxGeometry args={[0.8, 0.04, 0.01]} />
     <meshBasicMaterial color="#38bdf8" />
   </mesh>
 
-  <mesh position={[0, -0.8, 0.12]}>
-    <boxGeometry args={[4.8, 0.02, 0.01]} />
+  <mesh position={[2.2, 0.85, 0.15]}>
+    <boxGeometry args={[0.8, 0.04, 0.01]} />
     <meshBasicMaterial color="#38bdf8" />
   </mesh>
-   
 
-  {/* South America */}
- 
+  <mesh position={[-2.2, -0.85, 0.15]}>
+    <boxGeometry args={[0.8, 0.04, 0.01]} />
+    <meshBasicMaterial color="#38bdf8" />
+  </mesh>
+
+  <mesh position={[2.2, -0.85, 0.15]}>
+    <boxGeometry args={[0.8, 0.04, 0.01]} />
+    <meshBasicMaterial color="#38bdf8" />
+  </mesh>
 </group>
 
       {/* ========================= */}
