@@ -307,7 +307,7 @@ function PresentationSet({
   </mesh>
 
   {/* MEDIA Banner */}
-  <mesh position={[0, 0.45, 0.15]}>
+  <mesh position={[0, 0.45, 0.12]}>
     <boxGeometry args={[4.2, 0.75, 0.03]} />
     <meshBasicMaterial color="#0047AB" />
   </mesh>
@@ -323,7 +323,7 @@ function PresentationSet({
   </Text>
 
   {/* Red TV Banner */}
-  <mesh position={[0, -0.25, 0.15]}>
+  <mesh position={[0, -0.25, 0.16]}>
     <boxGeometry args={[3.4, 0.85, 0.03]} />
     <meshBasicMaterial color="#D40000" />
   </mesh>
