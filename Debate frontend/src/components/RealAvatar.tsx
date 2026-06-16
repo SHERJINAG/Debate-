@@ -179,7 +179,7 @@ function seededRandom(seed: number) {
 
 
   
-export default function StudioBackgroundSet() {
+function StudioBackgroundSet() {
   const screenTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 2048;
@@ -197,82 +197,121 @@ export default function StudioBackgroundSet() {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, 2048, 1024);
 
-    // ==========================
-    // LEFT STOCK SCREEN
-    // ==========================
+    // ===================================
+    // LEFT SCREEN - STOCK MARKET
+    // ===================================
+
     ctx.fillStyle = "#071827";
-    ctx.fillRect(50, 180, 450, 600);
+    ctx.fillRect(40, 180, 450, 620);
 
     ctx.fillStyle = "#00ff88";
-    ctx.font = "bold 50px Arial";
-    ctx.fillText("MARKET", 120, 140);
+    ctx.font = "bold 55px Arial";
+    ctx.fillText("MARKET LIVE", 90, 140);
 
+    // Grid
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+
+    for (let x = 40; x < 500; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 180);
+      ctx.lineTo(x, 800);
+      ctx.stroke();
+    }
+
+    for (let y = 180; y < 800; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(40, y);
+      ctx.lineTo(500, y);
+      ctx.stroke();
+    }
+
+    // Graph
     ctx.strokeStyle = "#00ff88";
     ctx.lineWidth = 8;
 
     ctx.beginPath();
-    ctx.moveTo(80, 700);
-    ctx.lineTo(140, 650);
-    ctx.lineTo(220, 600);
-    ctx.lineTo(300, 500);
+    ctx.moveTo(80, 720);
+    ctx.lineTo(140, 680);
+    ctx.lineTo(220, 620);
+    ctx.lineTo(300, 540);
     ctx.lineTo(380, 420);
     ctx.lineTo(460, 300);
     ctx.stroke();
 
-    // ==========================
+    // ===================================
     // CENTER MEDIA TV
-    // ==========================
-    ctx.fillStyle = "#0047ab";
-    ctx.fillRect(620, 250, 820, 180);
+    // ===================================
 
-    ctx.fillStyle = "white";
-    ctx.font = "bold 140px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("MEDIA", 1030, 380);
-
-    ctx.fillStyle = "#d40000";
-    ctx.fillRect(700, 470, 700, 180);
-
-    ctx.fillStyle = "white";
-    ctx.font = "bold 150px Arial";
-    ctx.fillText("TV", 1030, 610);
-
-    ctx.font = "bold 40px Arial";
-    ctx.fillText("AI NEWS. REAL IMPACT.", 1030, 720);
-
-    // Globe rings
-    ctx.strokeStyle = "rgba(255,255,255,0.15)";
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 5;
 
     ctx.beginPath();
-    ctx.arc(1030, 500, 320, 0, Math.PI * 2);
+    ctx.arc(1024, 500, 340, 0, Math.PI * 2);
     ctx.stroke();
 
-    // ==========================
-    // RIGHT ANALYTICS
-    // ==========================
-    ctx.fillStyle = "#071827";
-    ctx.fillRect(1550, 180, 450, 600);
+    ctx.beginPath();
+    ctx.arc(1024, 500, 250, 0, Math.PI * 2);
+    ctx.stroke();
 
-    ctx.fillStyle = "white";
-    ctx.font = "bold 45px Arial";
-    ctx.fillText("SURVEY", 1660, 140);
+    // MEDIA BOX
+    ctx.fillStyle = "#0047AB";
+    ctx.fillRect(620, 230, 820, 190);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 150px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("MEDIA", 1030, 370);
+
+    // TV BOX
+    ctx.fillStyle = "#D40000";
+    ctx.fillRect(700, 470, 650, 180);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 150px Arial";
+    ctx.fillText("TV", 1000, 600);
+
+    // Play icon
+    ctx.beginPath();
+    ctx.moveTo(1220, 510);
+    ctx.lineTo(1300, 560);
+    ctx.lineTo(1220, 610);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "bold 36px Arial";
+    ctx.fillText(
+      "AI NEWS • REAL IMPACT",
+      1030,
+      720
+    );
+
+    // ===================================
+    // RIGHT SCREEN - PIE CHART
+    // ===================================
+
+    ctx.fillStyle = "#071827";
+    ctx.fillRect(1550, 180, 450, 620);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 55px Arial";
+    ctx.fillText("SURVEY DATA", 1610, 140);
 
     const cx = 1730;
-    const cy = 430;
-    const r = 120;
-
-    let start = 0;
+    const cy = 450;
+    const r = 140;
 
     const sections = [
       [40, "#2563eb"],
-      [30, "#ef4444"],
+      [25, "#ef4444"],
       [20, "#22c55e"],
-      [10, "#facc15"],
+      [15, "#facc15"]
     ];
 
-    sections.forEach(([percent, color]) => {
-      const end = start + (Math.PI * 2 * percent) / 100;
+    let start = 0;
+
+    sections.forEach(([value, color]) => {
+      const end =
+        start + (Math.PI * 2 * value) / 100;
 
       ctx.beginPath();
       ctx.moveTo(cx, cy);
@@ -285,14 +324,15 @@ export default function StudioBackgroundSet() {
       start = end;
     });
 
-    // Bars
+    // Bar chart
     ctx.fillStyle = "#38bdf8";
-    ctx.fillRect(1860, 620, 30, -180);
-    ctx.fillRect(1910, 620, 30, -240);
-    ctx.fillRect(1960, 620, 30, -140);
 
+    ctx.fillRect(1860, 650, 28, -180);
+    ctx.fillRect(1910, 650, 28, -260);
+    ctx.fillRect(1960, 650, 28, -140);
+
+    // Texture
     const texture = new THREE.CanvasTexture(canvas);
-
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
 
@@ -315,7 +355,7 @@ export default function StudioBackgroundSet() {
       </mesh>
     </group>
   );
-        }
+                                }
 
 function HighGlossStageFloor() {
   return (
