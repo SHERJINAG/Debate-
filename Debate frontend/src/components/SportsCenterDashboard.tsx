@@ -249,7 +249,7 @@ function createStarSportsTexture(
     "bold 90px Arial";
 
   ctx.fillText(
-    "STAR SPORTS",
+    "MEDAI SPORTS",
     cx,
     height * 0.72
   );
@@ -488,7 +488,7 @@ fielders.forEach(([fx,fy])=>{
   ctx.font = "bold 80px Arial";
 
   ctx.fillText(
-    "STAR SPORTS",
+    "MEDAI SPORTS",
     cx,
     height * 0.72
   );
