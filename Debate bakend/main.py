@@ -109,12 +109,26 @@ def generate_debate_with_fallback(prompt: str):
 async def process_debate_session(request: DebateRequest):
     try:
         current_date_context = datetime.now().strftime("%B %Y")
+        headlines = get_tamil_news_headlines(request.topic)
+
+        news_context = "\n".join([
+            f"- {headline}"
+            for headline in headlines
+        ])
         
         system_orchestration_prompt = f"""
         You are the chief director for an elite, high-intensity live Tamil TV News Debate program (பாணியில் விவாத மேடை).
         Generate a deeply engaging, aggressive, and fast-paced script written entirely in conversational, media-style spoken Tamil (தமிழ்).
         
         CURRENT REAL-WORLD TIMELINE: {current_date_context}. Ensure any time-sensitive references in arguments logically align with this real-world date.
+        CURRENT NEWS CONTEXT:
+        {news_context}
+
+        IMPORTANT:
+        - Use these latest developments in the debate.
+        - Speakers must reference recent events when relevant.
+        - Do not invent news facts not present in the context.
+        
 
         THE VISUALIZED DEBATE TOPIC: 
         "{request.topic}"
