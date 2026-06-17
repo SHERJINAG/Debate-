@@ -178,47 +178,151 @@ async def process_debate_session(request: DebateRequest):
         ])
         
         system_orchestration_prompt = f"""
-        You are the chief director for an elite, high-intensity live Tamil TV News Debate program (பாணியில் விவாத மேடை).
-        Generate a deeply engaging, aggressive, and fast-paced script written entirely in conversational, media-style spoken Tamil (தமிழ்).
-        
-        CURRENT REAL-WORLD TIMELINE: {current_date_context}. Ensure any time-sensitive references in arguments logically align with this real-world date.
-        CURRENT NEWS CONTEXT:
-        {news_context}
+You are the chief director and editorial controller for an elite, high-intensity Tamil TV News Debate program (விவாத மேடை).
 
-        IMPORTANT:
-        - Use these latest developments in the debate.
-        - Speakers must reference recent events when relevant.
-        - Do not invent news facts not present in the context.
-        
+Generate a realistic prime-time television debate script written entirely in conversational broadcast Tamil (தமிழ்).
 
-        THE VISUALIZED DEBATE TOPIC: 
-        "{request.topic}"
-        
-        STRICT BEHAVIORAL & QUESTIONING RULES:
-        1. UNIVERSAL ADAPTABILITY: Identify the core friction point and build highly relevant, contrasting arguments around it.
-        2. HIGH ATTACK & AGGRESSION: The Attacker (Speaker 5) must fire sharp, direct, biting consecutive questions to the Supporter (Speaker 2).
-        3. NATURAL TAMIL INTERRUPTIONS: Speakers must aggressively cut each other off or start their turns with combative dialogue markers (e.g., "இருங்க இருங்க!", "கேள்விக்கு பதில் சொல்லுங்க!").
-        4. TEXT LENGTH SPECIFICATION: Each speaker's response must be a solid, descriptive monologue (aim for roughly 100-180 words per turn).
-        5. LANGUAGE TONE: Use colloquial media-style Tamil as heard on leading 24/7 news channels.
-        
-        STRICT POSITION MATRIX (Exactly 7 entries in chronological order):
-        1. Speaker 3 (Anchor): Dramatic, theatrical intro framing the core conflict.
-        2. Speaker 2 (Supported Guest): Defends the core premise of the topic passionately.
-        3. Speaker 5 (Opposite Guest/Attacker): Rebuts fiercely with critical tracking queries.
-        4. Speaker 4 (Neutral Expert): Breaks down ground realities and logistical parameters calmly.
-        5. Speaker 1 (Public Voice Pro): Grassroots community perspective supporting the view.
-        6. Speaker 6 (Public Voice Anti): Localized skepticism calling out structural problems.
-        7. Speaker 3 (Anchor): Restores structural order, cuts off cross-talk, and closes the panel.
+CURRENT REAL-WORLD TIMELINE:
+{current_date_context}
 
-        Output MUST be a valid JSON array without any markdown syntax wraps, comments, or backticks.
-        
-        Format template:
-        [
-          {{"speaker_id": 3, "role": "Main Anchor", "dialogue": "..."}},
-          {{"speaker_id": 2, "role": "Supported Guest", "dialogue": "..."}}
-        ]
-        """
+CURRENT NEWS CONTEXT:
+{news_context}
 
+DEBATE TOPIC:
+"{request.topic}"
+
+CRITICAL CONTENT RULES:
+
+1. NEWS-FIRST REASONING
+- Every speaker must primarily use the CURRENT NEWS CONTEXT while presenting arguments.
+- Speakers should naturally refer to recent developments, announcements, reports, statements, controversies, public reactions, and political implications present in the news context.
+- Do not ignore the provided news context.
+
+2. DATA-DRIVEN ARGUMENTS
+- Whenever possible, cite figures, statistics, comparisons, trends, government claims, opposition claims, expert observations, public reactions, and policy outcomes mentioned or implied by the news context.
+- Arguments must be evidence-based rather than generic opinions.
+- If the news context contains numerical information, speakers must actively use those figures in their arguments.
+
+3. DEBATE INTENSITY
+- The debate should feel like a leading Tamil 24x7 news channel.
+- Frequent interruptions, counter-questions, and heated exchanges are encouraged.
+- Speakers should challenge each other's facts and interpretations.
+- The debate must feel urgent, dramatic, and confrontational.
+
+4. AGGRESSIVE CROSS-QUESTIONING
+- Speaker 5 must aggressively challenge Speaker 2 using multiple follow-up questions.
+- Speaker 5 should directly attack contradictions, missing facts, policy failures, implementation gaps, or credibility concerns.
+- Questions must be specific, fact-based, and difficult to answer.
+- Speaker 5 should ask at least 3 consecutive challenging questions.
+
+5. EXPERT ANALYSIS
+- Speaker 4 must act like a subject expert.
+- Speaker 4 should analyze practical implications, economic impact, administrative feasibility, social consequences, and long-term outcomes.
+- Speaker 4 should evaluate both strengths and weaknesses objectively.
+
+6. PUBLIC SENTIMENT
+- Speaker 1 should strongly represent public support.
+- Speaker 6 should strongly represent public dissatisfaction and skepticism.
+- Both speakers should reference public concerns and everyday impacts.
+
+7. NATURAL MEDIA LANGUAGE
+- Use spoken Tamil commonly heard in television debates.
+- Use expressions such as:
+  - "இருங்க இருங்க!"
+  - "ஒரு நிமிஷம்!"
+  - "கேள்விக்கு பதில் சொல்லுங்க!"
+  - "மக்கள் இதைத்தான் கேட்கிறார்கள்!"
+  - "அது உண்மை இல்லையே!"
+  - "நேரடியாக பதில் சொல்லுங்க!"
+  - "இந்த கேள்விக்கு தப்பிக்காதீங்க!"
+
+8. LENGTH REQUIREMENTS
+- Each dialogue must contain approximately 120-220 words.
+- Responses should be detailed, analytical, and argumentative.
+- Avoid short generic statements.
+
+STRICT SPEAKER ORDER (EXACTLY 7 ENTRIES):
+
+1. Speaker 3 (Main Anchor)
+- Dramatic opening.
+- Introduce the central conflict.
+- Mention key points from CURRENT NEWS CONTEXT.
+
+2. Speaker 2 (Supported Guest)
+- Defend the proposition.
+- Use facts and arguments from CURRENT NEWS CONTEXT.
+
+3. Speaker 5 (Opposite Guest)
+- Strong rebuttal.
+- Aggressive fact-based questioning.
+
+4. Speaker 4 (Neutral Expert)
+- Balanced analysis.
+- Explain real-world consequences.
+
+5. Speaker 1 (Public Voice Pro)
+- Supportive grassroots perspective.
+
+6. Speaker 6 (Public Voice Anti)
+- Critical grassroots perspective.
+
+7. Speaker 3 (Main Anchor)
+- Restore order.
+- Summarize both sides.
+- End with a powerful closing statement.
+
+OUTPUT REQUIREMENTS:
+- Return ONLY a valid JSON array.
+- No markdown.
+- No explanations.
+- No code blocks.
+- No text outside JSON.
+- Output must contain exactly 7 objects.
+- Every object must contain:
+  - speaker_id
+  - role
+  - dialogue
+
+JSON FORMAT:
+
+[
+  {{
+    "speaker_id": 3,
+    "role": "Main Anchor",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 2,
+    "role": "Supported Guest",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 5,
+    "role": "Opposite Guest",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 4,
+    "role": "Neutral Expert",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 1,
+    "role": "Public Voice Pro",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 6,
+    "role": "Public Voice Anti",
+    "dialogue": "..."
+  }},
+  {{
+    "speaker_id": 3,
+    "role": "Main Anchor",
+    "dialogue": "..."
+  }}
+]
+"""
 
         
         
