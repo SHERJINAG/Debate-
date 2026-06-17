@@ -66,6 +66,67 @@ def get_tamil_news_headlines(category: str):
         for entry in feed.entries[:10]
     ]
 
+import re
+import feedparser
+from urllib.parse import quote
+
+
+def fetch_debate_topic_news(topic: str, max_results: int = 10):
+    try:
+        # Clean topic
+        topic = str(topic).strip()
+
+        # Extract words
+        words = re.findall(r"[A-Za-z0-9]+", topic)
+
+        # Common words to ignore
+        stop_words = {
+            "the", "a", "an", "is", "are", "was", "were",
+            "will", "would", "can", "could", "should",
+            "and", "or", "of", "to", "in", "on", "for",
+            "with", "about", "having", "regarding",
+            "issues", "people", "government"
+        }
+
+        keywords = [
+            word
+            for word in words
+            if len(word) > 2 and word.lower() not in stop_words
+        ]
+
+        # Use top keywords only
+        search_query = " ".join(keywords[:6])
+
+        # Fallback
+        if not search_query:
+            search_query = topic[:100]
+
+        # IMPORTANT: URL encode
+        encoded_query = quote(search_query)
+
+        rss_url = (
+            f"https://news.google.com/rss/search?"
+            f"q={encoded_query}"
+            f"&hl=ta"
+            f"&gl=IN"
+            f"&ceid=IN:ta"
+        )
+
+        feed = feedparser.parse(rss_url)
+
+        headlines = []
+
+        for entry in feed.entries[:max_results]:
+            title = entry.get("title", "").strip()
+
+            if title and title not in headlines:
+                headlines.append(title)
+
+        return headlines
+
+    except Exception as e:
+        print(f"News Search Error: {e}")
+        return []
 
 def generate_debate_with_fallback(prompt: str):
 
@@ -109,7 +170,7 @@ def generate_debate_with_fallback(prompt: str):
 async def process_debate_session(request: DebateRequest):
     try:
         current_date_context = datetime.now().strftime("%B %Y")
-        headlines = get_tamil_news_headlines(request.topic)
+        headlines = fetch_debate_topic_news(request.topic)
 
         news_context = "\n".join([
             f"- {headline}"
