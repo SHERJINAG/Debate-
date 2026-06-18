@@ -1237,7 +1237,7 @@ function CinematicCamera({ activeSpeaker }: { activeSpeaker: number | null }) {
   return (
     <PerspectiveCamera
       makeDefault
-      fov={isMobile ? 80 : 30}
+      fov={isMobile ? 85 : 30}
     />
   );
 }
